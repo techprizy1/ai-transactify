@@ -1,4 +1,3 @@
-
 import { Transaction } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
 import { ChevronRight, ArrowUp, ArrowDown, ShoppingCart, DollarSign } from 'lucide-react';
@@ -76,7 +75,7 @@ const TransactionCard = ({ transaction }: { transaction: Transaction }) => {
               <p className="text-xs text-muted-foreground mt-1">{transaction.category} • {timeAgo}</p>
             </div>
             <div className={`text-right ${getAmountClass()}`}>
-              <p className="text-base font-semibold">{getAmountSign()}${transaction.amount.toFixed(2)}</p>
+              <p className="text-base font-semibold">{getAmountSign()}₹{transaction.amount.toFixed(2)}</p>
               <p className="text-xs text-muted-foreground mt-1">{getTypeLabel()}</p>
             </div>
           </div>

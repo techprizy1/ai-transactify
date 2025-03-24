@@ -43,11 +43,11 @@ const Transactions = () => {
               <h2 className="text-xl font-semibold mb-4">Example phrases</h2>
               <div className="space-y-3">
                 {[
-                  "Paid $50 for dinner with client at Olive Garden yesterday",
-                  "Received $1,200 payment from client ABC Corp for web design services",
-                  "Purchased new office chair from Amazon for $299",
-                  "Spent $85 on gas for company vehicle on April 10th",
-                  "Sold products to customer XYZ for $750 last Monday"
+                  "Paid ₹3500 for dinner with client at Taj Hotel yesterday",
+                  "Received ₹85000 payment from client ABC Corp for web design services",
+                  "Purchased new office chair from Amazon for ₹12999",
+                  "Spent ₹5000 on petrol for company vehicle on April 10th",
+                  "Sold products to customer XYZ for ₹45000 last Monday"
                 ].map((example, index) => (
                   <div 
                     key={index} 

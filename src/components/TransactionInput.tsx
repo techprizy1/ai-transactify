@@ -51,7 +51,7 @@ const TransactionInput = ({ onTransactionCreated }: TransactionInputProps) => {
           </label>
           <Textarea
             id="transaction-input"
-            placeholder="Example: Paid $120 for office supplies at Staples on March 15th"
+            placeholder="Example: Paid ₹8500 for office supplies at Reliance Digital on March 15th"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             rows={4}

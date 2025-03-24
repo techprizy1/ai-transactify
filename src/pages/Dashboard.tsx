@@ -141,7 +141,7 @@ const Dashboard = () => {
               <DollarSign className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">${totalIncome.toFixed(2)}</div>
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">₹{totalIncome.toFixed(2)}</div>
               <p className="text-xs text-muted-foreground">+12.5% from last month</p>
             </CardContent>
           </Card>
@@ -152,7 +152,7 @@ const Dashboard = () => {
               <ArrowUp className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600 dark:text-red-400">${totalExpense.toFixed(2)}</div>
+              <div className="text-2xl font-bold text-red-600 dark:text-red-400">₹{totalExpense.toFixed(2)}</div>
               <p className="text-xs text-muted-foreground">+5.2% from last month</p>
             </CardContent>
           </Card>
@@ -164,7 +164,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className={`text-2xl font-bold ${netProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                ${netProfit.toFixed(2)}
+                ₹{netProfit.toFixed(2)}
               </div>
               <p className="text-xs text-muted-foreground">+8.1% from last month</p>
             </CardContent>
