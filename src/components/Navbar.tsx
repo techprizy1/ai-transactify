@@ -1,12 +1,17 @@
 
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { CircleDollarSign, LineChart, PlusCircle, Home } from "lucide-react";
+import { CircleDollarSign, LineChart, PlusCircle, Home, LogOut, User } from "lucide-react";
+import { useAuth } from '@/context/AuthContext';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 const Navbar = () => {
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   
   useEffect(() => {
     const handleScroll = () => {
@@ -20,6 +25,16 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
+  const getInitials = () => {
+    if (!user || !user.email) return '?';
+    return user.email.charAt(0).toUpperCase();
+  };
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
@@ -38,27 +53,56 @@ const Navbar = () => {
               <span>Home</span>
             </Link>
           </Button>
-          <Button asChild variant="ghost" className={location.pathname === '/dashboard' ? 'bg-muted' : ''}>
-            <Link to="/dashboard" className="flex items-center space-x-1">
-              <LineChart className="w-4 h-4 mr-1" />
-              <span>Dashboard</span>
-            </Link>
-          </Button>
-          <Button asChild variant="ghost" className={location.pathname === '/transactions' ? 'bg-muted' : ''}>
-            <Link to="/transactions" className="flex items-center space-x-1">
-              <PlusCircle className="w-4 h-4 mr-1" />
-              <span>New Transaction</span>
-            </Link>
-          </Button>
+          
+          {user && (
+            <>
+              <Button asChild variant="ghost" className={location.pathname === '/dashboard' ? 'bg-muted' : ''}>
+                <Link to="/dashboard" className="flex items-center space-x-1">
+                  <LineChart className="w-4 h-4 mr-1" />
+                  <span>Dashboard</span>
+                </Link>
+              </Button>
+              <Button asChild variant="ghost" className={location.pathname === '/transactions' ? 'bg-muted' : ''}>
+                <Link to="/transactions" className="flex items-center space-x-1">
+                  <PlusCircle className="w-4 h-4 mr-1" />
+                  <span>New Transaction</span>
+                </Link>
+              </Button>
+            </>
+          )}
         </nav>
         
         <div className="flex items-center space-x-4">
-          <Button variant="outline" size="sm" className="hidden md:flex">
-            Sign In
-          </Button>
-          <Button size="sm" className="hidden md:flex">
-            Get Started
-          </Button>
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full h-8 w-8">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback>{getInitials()}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => navigate('/profile')}>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sign out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <>
+              <Button variant="outline" size="sm" className="hidden md:flex" onClick={() => navigate('/auth')}>
+                Sign In
+              </Button>
+              <Button size="sm" className="hidden md:flex" onClick={() => navigate('/auth')}>
+                Get Started
+              </Button>
+            </>
+          )}
           
           {/* Mobile menu button */}
           <Button variant="ghost" size="icon" className="md:hidden">
