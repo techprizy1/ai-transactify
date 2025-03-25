@@ -13,6 +13,9 @@ import Invoice from "./pages/Invoice";
 import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import SalesReport from "./pages/SalesReport";
+import PurchaseOrders from "./pages/PurchaseOrders";
+import PurchaseReport from "./pages/PurchaseReport";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +42,21 @@ const App = () => (
             <Route path="/invoice" element={
               <ProtectedRoute>
                 <Invoice />
+              </ProtectedRoute>
+            } />
+            <Route path="/sales-report" element={
+              <ProtectedRoute>
+                <SalesReport />
+              </ProtectedRoute>
+            } />
+            <Route path="/purchase-orders" element={
+              <ProtectedRoute>
+                <PurchaseOrders />
+              </ProtectedRoute>
+            } />
+            <Route path="/purchase-report" element={
+              <ProtectedRoute>
+                <PurchaseReport />
               </ProtectedRoute>
             } />
             <Route path="/profile" element={
