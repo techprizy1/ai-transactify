@@ -9,10 +9,8 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarProvider,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { FileText, ShoppingCart, TrendingUp, TrendingDown } from "lucide-react";
+import { Home, LineChart, PlusCircle, FileText, ShoppingCart, TrendingUp, TrendingDown } from "lucide-react";
 
 export function AppSidebar() {
   const location = useLocation();
@@ -22,6 +20,38 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarContent>
+        {/* Main Navigation */}
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive('/')} tooltip="Home">
+                  <Link to="/">
+                    <Home />
+                    <span>Home</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive('/dashboard')} tooltip="Dashboard">
+                  <Link to="/dashboard">
+                    <LineChart />
+                    <span>Dashboard</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive('/transactions')} tooltip="New Transaction">
+                  <Link to="/transactions">
+                    <PlusCircle />
+                    <span>New Transaction</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
         {/* Sales Group */}
         <SidebarGroup>
           <SidebarGroupLabel>Sales</SidebarGroupLabel>
@@ -36,7 +66,7 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Sales Report">
+                <SidebarMenuButton asChild isActive={isActive('/sales-report')} tooltip="Sales Report">
                   <Link to="/sales-report">
                     <TrendingUp />
                     <span>Sales Report</span>
@@ -53,7 +83,7 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Purchase Orders">
+                <SidebarMenuButton asChild isActive={isActive('/purchase-orders')} tooltip="Purchase Orders">
                   <Link to="/purchase-orders">
                     <ShoppingCart />
                     <span>Purchase Orders</span>
@@ -61,7 +91,7 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Purchase Report">
+                <SidebarMenuButton asChild isActive={isActive('/purchase-report')} tooltip="Purchase Report">
                   <Link to="/purchase-report">
                     <TrendingDown />
                     <span>Purchase Report</span>

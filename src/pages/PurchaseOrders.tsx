@@ -1,5 +1,4 @@
 
-import Navbar from '@/components/Navbar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/AppSidebar';
 
@@ -8,9 +7,7 @@ const PurchaseOrders = () => {
     <SidebarProvider>
       <div className="flex w-full min-h-screen">
         <AppSidebar />
-        <div className="flex-1 min-h-screen pt-20">
-          <Navbar />
-          
+        <div className="flex-1 min-h-screen">
           <main className="container mx-auto max-w-6xl px-4 py-10">
             <div className="text-center mb-12">
               <h1 className="text-3xl font-bold tracking-tight">Purchase Orders</h1>
