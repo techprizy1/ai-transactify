@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { CircleDollarSign, LineChart, PlusCircle, Home, LogOut, User } from "lucide-react";
+import { CircleDollarSign, LineChart, PlusCircle, Home, LogOut, User, FileText } from "lucide-react";
 import { useAuth } from '@/context/AuthContext';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -66,6 +66,12 @@ const Navbar = () => {
                 <Link to="/transactions" className="flex items-center space-x-1">
                   <PlusCircle className="w-4 h-4 mr-1" />
                   <span>New Transaction</span>
+                </Link>
+              </Button>
+              <Button asChild variant="ghost" className={location.pathname === '/invoice' ? 'bg-muted' : ''}>
+                <Link to="/invoice" className="flex items-center space-x-1">
+                  <FileText className="w-4 h-4 mr-1" />
+                  <span>Invoice</span>
                 </Link>
               </Button>
             </>
