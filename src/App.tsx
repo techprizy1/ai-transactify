@@ -9,6 +9,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Transactions from "./pages/Transactions";
+import Invoice from "./pages/Invoice";
 import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -33,6 +34,11 @@ const App = () => (
             <Route path="/transactions" element={
               <ProtectedRoute>
                 <Transactions />
+              </ProtectedRoute>
+            } />
+            <Route path="/invoice" element={
+              <ProtectedRoute>
+                <Invoice />
               </ProtectedRoute>
             } />
             <Route path="/profile" element={
