@@ -84,7 +84,7 @@ serve(async (req) => {
           },
           { role: 'user', content: prompt }
         ],
-        temperature: A0.3,
+        temperature: 0.3,
       }),
     });
 
