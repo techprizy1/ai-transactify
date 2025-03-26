@@ -30,6 +30,12 @@ interface InvoiceData {
   total: number;
 }
 
+interface BusinessInfo {
+  business_name: string;
+  business_address: string;
+  contact_number: string;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -37,26 +43,17 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt } = await req.json();
+    const { prompt, businessInfo } = await req.json();
 
     if (!prompt) {
       throw new Error('Prompt is required');
     }
 
     console.log('Processing invoice prompt:', prompt);
+    console.log('Business info:', businessInfo);
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: `You are an AI assistant that helps generate invoice data from user descriptions.
+    // Enhance the system prompt with business information if available
+    let systemPrompt = `You are an AI assistant that helps generate invoice data from user descriptions.
             Extract information and return ONLY a JSON object with the following structure:
             {
               "invoiceNumber": "string (auto-generate if not specified)",
@@ -80,8 +77,18 @@ serve(async (req) => {
               "taxAmount": number (subtotal * taxRate / 100)",
               "total": number (subtotal + taxAmount)"
             }
-            Fill in any missing details with reasonable defaults. Do not include any explanations in your response, only the JSON object.`
-          },
+            Fill in any missing details with reasonable defaults. Do not include any explanations in your response, only the JSON object.`;
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt }
         ],
         temperature: 0.3,
@@ -110,7 +117,10 @@ serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify(invoiceData), {
+    return new Response(JSON.stringify({
+      ...invoiceData,
+      businessInfo
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {

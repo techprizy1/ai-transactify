@@ -19,3 +19,9 @@ export interface AITransactionResponse {
   category: string;
   date: string;
 }
+
+export interface BusinessProfile {
+  business_name: string;
+  business_address: string;
+  contact_number: string;
+}

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
@@ -7,12 +8,19 @@ import { supabase } from "@/integrations/supabase/client";
 import InvoicePreview from '@/components/InvoicePreview';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/AppSidebar';
+import { useAuth } from '@/context/AuthContext';
 
 interface InvoiceItem {
   description: string;
   quantity: number;
   unitPrice: number;
   amount: number;
+}
+
+interface BusinessInfo {
+  business_name: string | null;
+  business_address: string | null;
+  contact_number: string | null;
 }
 
 interface InvoiceData {
@@ -29,12 +37,47 @@ interface InvoiceData {
   taxRate: number;
   taxAmount: number;
   total: number;
+  businessInfo?: BusinessInfo;
 }
 
 const Invoice = () => {
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [invoiceData, setInvoiceData] = useState<InvoiceData | null>(null);
+  const { user } = useAuth();
+  const [businessInfo, setBusinessInfo] = useState<BusinessInfo>({
+    business_name: null,
+    business_address: null,
+    contact_number: null
+  });
+  
+  useEffect(() => {
+    const fetchBusinessInfo = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('business_name, business_address, contact_number')
+          .eq('id', user.id)
+          .maybeSingle();
+          
+        if (error) throw error;
+        
+        if (data) {
+          setBusinessInfo({
+            business_name: data.business_name,
+            business_address: data.business_address,
+            contact_number: data.contact_number
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching business info:', error);
+      }
+    };
+    
+    fetchBusinessInfo();
+  }, [user]);
   
   const handleGenerateInvoice = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +91,10 @@ const Invoice = () => {
     
     try {
       const { data, error } = await supabase.functions.invoke('generate-invoice', {
-        body: { prompt },
+        body: { 
+          prompt,
+          businessInfo
+        },
       });
 
       if (error) {
@@ -77,6 +123,8 @@ const Invoice = () => {
     window.print();
   };
   
+  const isBusinessInfoMissing = !businessInfo.business_name || !businessInfo.business_address || !businessInfo.contact_number;
+  
   return (
     <SidebarProvider>
       <div className="flex w-full min-h-screen">
@@ -89,6 +137,23 @@ const Invoice = () => {
                 Describe your invoice in natural language and our AI will generate it for you
               </p>
             </div>
+            
+            {isBusinessInfoMissing && (
+              <div className="mb-8 p-4 border border-yellow-200 bg-yellow-50 rounded-md">
+                <p className="text-yellow-800 font-medium">Business information incomplete</p>
+                <p className="text-sm text-yellow-700 mt-1">
+                  Add your business name, address, and contact number in your profile to display them on invoices.
+                </p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-800"
+                  onClick={() => window.location.href = '/profile'}
+                >
+                  Update Profile
+                </Button>
+              </div>
+            )}
             
             <div className="grid lg:grid-cols-2 gap-8 print:hidden">
               <div className="space-y-8">

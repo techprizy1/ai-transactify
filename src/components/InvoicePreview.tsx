@@ -1,5 +1,8 @@
 
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 
 interface InvoiceItem {
   description: string;
@@ -22,6 +25,12 @@ interface InvoiceData {
   taxRate: number;
   taxAmount: number;
   total: number;
+}
+
+interface BusinessInfo {
+  business_name: string | null;
+  business_address: string | null;
+  contact_number: string | null;
 }
 
 interface InvoicePreviewProps {
@@ -50,6 +59,41 @@ const formatDate = (dateString: string): string => {
 };
 
 const InvoicePreview = ({ invoice }: InvoicePreviewProps) => {
+  const { user } = useAuth();
+  const [businessInfo, setBusinessInfo] = useState<BusinessInfo>({
+    business_name: null,
+    business_address: null,
+    contact_number: null
+  });
+
+  useEffect(() => {
+    const fetchBusinessInfo = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('business_name, business_address, contact_number')
+          .eq('id', user.id)
+          .maybeSingle();
+          
+        if (error) throw error;
+        
+        if (data) {
+          setBusinessInfo({
+            business_name: data.business_name,
+            business_address: data.business_address,
+            contact_number: data.contact_number
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching business info:', error);
+      }
+    };
+    
+    fetchBusinessInfo();
+  }, [user]);
+
   return (
     <div className="bg-white rounded-lg overflow-hidden border p-6 print:border-0 print:p-1 print:shadow-none">
       <div className="flex flex-col space-y-6">
@@ -62,11 +106,10 @@ const InvoicePreview = ({ invoice }: InvoicePreviewProps) => {
             </div>
           </div>
           <div className="text-right">
-            <div className="text-gray-900 font-medium">Your Company Name</div>
+            <div className="text-gray-900 font-medium">{businessInfo.business_name || 'Your Company Name'}</div>
             <div className="text-sm text-gray-500 mt-1">
-              <p>123 Business Road</p>
-              <p>Mumbai, India 400001</p>
-              <p>info@yourcompany.com</p>
+              <p>{businessInfo.business_address || 'Business Address Not Set'}</p>
+              <p>{businessInfo.contact_number || 'Contact Number Not Set'}</p>
             </div>
           </div>
         </div>
