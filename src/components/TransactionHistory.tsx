@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Transaction } from '@/lib/types';
+import { Transaction, TransactionType } from '@/lib/types';
 import TransactionCard from './TransactionCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,20 +8,31 @@ import { Search, Filter } from 'lucide-react';
 
 interface TransactionHistoryProps {
   transactions: Transaction[];
+  title?: string;
+  filterTypes?: TransactionType[];
 }
 
-const TransactionHistory = ({ transactions }: TransactionHistoryProps) => {
+const TransactionHistory = ({ 
+  transactions, 
+  title = "Transaction History",
+  filterTypes 
+}: TransactionHistoryProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   
-  const filteredTransactions = transactions.filter((transaction) => 
-    transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    transaction.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter by search term and optionally by transaction type
+  const filteredTransactions = transactions.filter((transaction) => {
+    const matchesSearch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      transaction.category.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesType = !filterTypes || filterTypes.includes(transaction.type);
+    
+    return matchesSearch && matchesType;
+  });
   
   return (
     <div className="glass-panel p-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h2 className="text-xl font-semibold">Transaction History</h2>
+        <h2 className="text-xl font-semibold">{title}</h2>
         
         <div className="flex w-full sm:w-auto items-center space-x-2">
           <div className="relative flex-1 sm:flex-initial">

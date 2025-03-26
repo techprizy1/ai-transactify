@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/AppSidebar';
 import TransactionInput from '@/components/TransactionInput';
@@ -7,8 +7,28 @@ import TransactionHistory from '@/components/TransactionHistory';
 import { Transaction, AITransactionResponse } from '@/lib/types';
 import { toast } from 'sonner';
 
+// Create a local storage key for transactions
+const TRANSACTIONS_STORAGE_KEY = 'accountai-transactions';
+
 const Transactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  
+  // Load transactions from local storage on component mount
+  useEffect(() => {
+    const savedTransactions = localStorage.getItem(TRANSACTIONS_STORAGE_KEY);
+    if (savedTransactions) {
+      try {
+        setTransactions(JSON.parse(savedTransactions));
+      } catch (error) {
+        console.error('Failed to parse saved transactions:', error);
+      }
+    }
+  }, []);
+  
+  // Save transactions to local storage whenever they change
+  useEffect(() => {
+    localStorage.setItem(TRANSACTIONS_STORAGE_KEY, JSON.stringify(transactions));
+  }, [transactions]);
   
   const handleTransactionCreated = (aiResponse: AITransactionResponse) => {
     const newTransaction: Transaction = {

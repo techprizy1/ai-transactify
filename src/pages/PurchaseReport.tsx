@@ -1,8 +1,48 @@
 
+import { useState, useEffect } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/AppSidebar';
+import TransactionHistory from '@/components/TransactionHistory';
+import { Transaction } from '@/lib/types';
+import { 
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
 
 const PurchaseReport = () => {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    // Load transactions from local storage
+    const savedTransactions = localStorage.getItem('accountai-transactions');
+    if (savedTransactions) {
+      try {
+        const allTransactions = JSON.parse(savedTransactions);
+        setTransactions(allTransactions);
+      } catch (error) {
+        console.error('Failed to parse saved transactions:', error);
+      }
+    }
+    setLoading(false);
+  }, []);
+  
+  // Filter purchase-related transactions
+  const purchaseTransactions = transactions.filter(
+    transaction => transaction.type === 'expense' || transaction.type === 'purchase'
+  );
+  
+  // Calculate total purchases
+  const totalPurchases = purchaseTransactions.reduce(
+    (sum, transaction) => sum + transaction.amount, 
+    0
+  );
+
   return (
     <SidebarProvider>
       <div className="flex w-full min-h-screen">
@@ -16,10 +56,52 @@ const PurchaseReport = () => {
               </p>
             </div>
             
-            <div className="glass-panel p-6">
-              <h2 className="text-xl font-semibold mb-4">Coming Soon</h2>
-              <p>The Purchase Report feature is under development.</p>
-            </div>
+            {loading ? (
+              <div className="glass-panel p-6 text-center">
+                <p>Loading purchase data...</p>
+              </div>
+            ) : purchaseTransactions.length > 0 ? (
+              <div className="space-y-8">
+                <div className="glass-panel p-6">
+                  <h2 className="text-xl font-semibold mb-4">Purchase Summary</h2>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Metric</TableHead>
+                        <TableHead className="text-right">Value</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell>Total Purchases</TableCell>
+                        <TableCell className="text-right font-medium">₹{totalPurchases.toFixed(2)}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Number of Transactions</TableCell>
+                        <TableCell className="text-right font-medium">{purchaseTransactions.length}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Average Purchase</TableCell>
+                        <TableCell className="text-right font-medium">
+                          ₹{(totalPurchases / (purchaseTransactions.length || 1)).toFixed(2)}
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+                
+                <TransactionHistory 
+                  transactions={purchaseTransactions} 
+                  title="Purchase Transactions" 
+                  filterTypes={['expense', 'purchase']}
+                />
+              </div>
+            ) : (
+              <div className="glass-panel p-6 text-center">
+                <h2 className="text-xl font-semibold mb-4">No Purchase Data</h2>
+                <p>You haven't recorded any purchase transactions yet.</p>
+              </div>
+            )}
           </main>
         </div>
       </div>
