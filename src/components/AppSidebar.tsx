@@ -1,4 +1,3 @@
-
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Sidebar,
@@ -21,18 +20,26 @@ import {
   TrendingDown,
   User,
   LogOut,
-  Receipt
+  Receipt,
+  Settings,
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/context/AuthContext';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CircleDollarSign } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useState, useEffect } from 'react';
 
 export function AppSidebar() {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   const isActive = (path: string) => location.pathname === path;
 
@@ -47,149 +54,287 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar>
+    <Sidebar className="bg-gradient-to-b from-background to-background/80 backdrop-blur-sm border-r border-border/30">
       <SidebarContent>
         {/* Logo/Brand */}
-        <SidebarGroup>
-          <Link to="/" className="flex items-center space-x-2 p-4">
-            <CircleDollarSign className="w-8 h-8 text-primary" />
-            <span className="text-xl font-medium">AccountAI</span>
+        <SidebarGroup className="py-6">
+          <Link to="/" className="flex items-center space-x-3 px-6">
+            <div className="relative">
+              <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-primary to-purple-600 opacity-75 blur"></div>
+              <CircleDollarSign className="relative w-9 h-9 text-primary-foreground bg-primary rounded-full p-1.5" />
+            </div>
+            <span className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">AccountAI</span>
           </Link>
         </SidebarGroup>
 
         {/* Main Navigation */}
-        <SidebarGroup>
+        <SidebarGroup className="px-3">
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive('/')} tooltip="Home">
-                  <Link to="/">
-                    <Home />
-                    <span>Home</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive('/dashboard')} tooltip="Dashboard">
-                  <Link to="/dashboard">
-                    <LineChart />
-                    <span>Dashboard</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive('/transactions')} tooltip="New Transaction">
-                  <Link to="/transactions">
-                    <PlusCircle />
-                    <span>New Transaction</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {mounted && ['/', '/dashboard', '/transactions'].map((path, i) => {
+                const isCurrentActive = isActive(path);
+                const icons = {
+                  '/': <Home className={`${isCurrentActive ? 'text-primary' : ''}`} />,
+                  '/dashboard': <LineChart className={`${isCurrentActive ? 'text-primary' : ''}`} />,
+                  '/transactions': <PlusCircle className={`${isCurrentActive ? 'text-primary' : ''}`} />
+                };
+                const labels = {
+                  '/': 'Home',
+                  '/dashboard': 'Dashboard',
+                  '/transactions': 'New Transaction'
+                };
+                const tooltips = {
+                  '/': 'Home',
+                  '/dashboard': 'Dashboard',
+                  '/transactions': 'New Transaction'
+                };
+                
+                return (
+                  <div key={path} className="animate-fadeIn" style={{ animationDelay: `${i * 100}ms` }}>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton 
+                        asChild 
+                        isActive={isCurrentActive} 
+                        tooltip={tooltips[path as keyof typeof tooltips]}
+                        className={`${isCurrentActive ? 'bg-primary/10 hover:bg-primary/15' : 'hover:bg-accent/50'} transition-all duration-200 rounded-lg my-1`}
+                      >
+                        <Link to={path} className="flex items-center gap-3 p-2.5 pl-3">
+                          {icons[path as keyof typeof icons]}
+                          <span className={`${isCurrentActive ? 'font-medium text-primary' : ''}`}>
+                            {labels[path as keyof typeof labels]}
+                          </span>
+                          {isCurrentActive && (
+                            <div
+                              className="absolute left-0 w-1 h-6 bg-primary rounded-r-full"
+                            />
+                          )}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </div>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
         {/* Sales Group */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Sales</SidebarGroupLabel>
+        <SidebarGroup className="mt-6 px-3">
+          <SidebarGroupLabel className="px-4 text-xs uppercase tracking-widest text-muted-foreground/80 font-semibold">
+            Sales
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive('/invoice')} tooltip="Invoice">
-                  <Link to="/invoice">
-                    <FileText />
-                    <span>Invoice</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive('/sales-report')} tooltip="Sales Report">
-                  <Link to="/sales-report">
-                    <TrendingUp />
-                    <span>Sales Report</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {mounted && ['/invoice', '/sales-report'].map((path, i) => {
+                const isCurrentActive = isActive(path);
+                const icons = {
+                  '/invoice': <FileText className={`${isCurrentActive ? 'text-primary' : ''}`} />,
+                  '/sales-report': <TrendingUp className={`${isCurrentActive ? 'text-primary' : ''}`} />
+                };
+                const labels = {
+                  '/invoice': 'Invoice',
+                  '/sales-report': 'Sales Report'
+                };
+                const tooltips = {
+                  '/invoice': 'Invoice',
+                  '/sales-report': 'Sales Report'
+                };
+                
+                return (
+                  <div key={path} className="animate-fadeIn" style={{ animationDelay: `${(i + 3) * 100}ms` }}>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton 
+                        asChild 
+                        isActive={isCurrentActive} 
+                        tooltip={tooltips[path as keyof typeof tooltips]}
+                        className={`${isCurrentActive ? 'bg-primary/10 hover:bg-primary/15' : 'hover:bg-accent/50'} transition-all duration-200 rounded-lg my-1`}
+                      >
+                        <Link to={path} className="flex items-center gap-3 p-2.5 pl-3">
+                          {icons[path as keyof typeof icons]}
+                          <span className={`${isCurrentActive ? 'font-medium text-primary' : ''}`}>
+                            {labels[path as keyof typeof labels]}
+                          </span>
+                          {isCurrentActive && (
+                            <div
+                              className="absolute left-0 w-1 h-6 bg-primary rounded-r-full"
+                            />
+                          )}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </div>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
         {/* Purchase Group */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Purchase</SidebarGroupLabel>
+        <SidebarGroup className="mt-6 px-3">
+          <SidebarGroupLabel className="px-4 text-xs uppercase tracking-widest text-muted-foreground/80 font-semibold">
+            Purchase
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive('/purchase-orders')} tooltip="Purchase Orders">
-                  <Link to="/purchase-orders">
-                    <ShoppingCart />
-                    <span>Purchase Orders</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive('/purchase-report')} tooltip="Purchase Report">
-                  <Link to="/purchase-report">
-                    <TrendingDown />
-                    <span>Purchase Report</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {mounted && ['/purchase-orders', '/purchase-report'].map((path, i) => {
+                const isCurrentActive = isActive(path);
+                const icons = {
+                  '/purchase-orders': <ShoppingCart className={`${isCurrentActive ? 'text-primary' : ''}`} />,
+                  '/purchase-report': <TrendingDown className={`${isCurrentActive ? 'text-primary' : ''}`} />
+                };
+                const labels = {
+                  '/purchase-orders': 'Purchase Orders',
+                  '/purchase-report': 'Purchase Report'
+                };
+                const tooltips = {
+                  '/purchase-orders': 'Purchase Orders',
+                  '/purchase-report': 'Purchase Report'
+                };
+                
+                return (
+                  <div key={path} className="animate-fadeIn" style={{ animationDelay: `${(i + 5) * 100}ms` }}>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton 
+                        asChild 
+                        isActive={isCurrentActive} 
+                        tooltip={tooltips[path as keyof typeof tooltips]}
+                        className={`${isCurrentActive ? 'bg-primary/10 hover:bg-primary/15' : 'hover:bg-accent/50'} transition-all duration-200 rounded-lg my-1`}
+                      >
+                        <Link to={path} className="flex items-center gap-3 p-2.5 pl-3">
+                          {icons[path as keyof typeof icons]}
+                          <span className={`${isCurrentActive ? 'font-medium text-primary' : ''}`}>
+                            {labels[path as keyof typeof labels]}
+                          </span>
+                          {isCurrentActive && (
+                            <div
+                              className="absolute left-0 w-1 h-6 bg-primary rounded-r-full"
+                            />
+                          )}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </div>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Expense Group - NEW */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Expense</SidebarGroupLabel>
+        {/* Expense Group */}
+        <SidebarGroup className="mt-6 px-3">
+          <SidebarGroupLabel className="px-4 text-xs uppercase tracking-widest text-muted-foreground/80 font-semibold">
+            Expense
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive('/expense-report')} tooltip="Expense Report">
-                  <Link to="/expense-report">
-                    <Receipt />
-                    <span>Expense Report</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {mounted && ['/expense-report'].map((path, i) => {
+                const isCurrentActive = isActive(path);
+                const icons = {
+                  '/expense-report': <Receipt className={`${isCurrentActive ? 'text-primary' : ''}`} />
+                };
+                const labels = {
+                  '/expense-report': 'Expense Report'
+                };
+                const tooltips = {
+                  '/expense-report': 'Expense Report'
+                };
+                
+                return (
+                  <div key={path} className="animate-fadeIn" style={{ animationDelay: `${(i + 7) * 100}ms` }}>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton 
+                        asChild 
+                        isActive={isCurrentActive} 
+                        tooltip={tooltips[path as keyof typeof tooltips]}
+                        className={`${isCurrentActive ? 'bg-primary/10 hover:bg-primary/15' : 'hover:bg-accent/50'} transition-all duration-200 rounded-lg my-1`}
+                      >
+                        <Link to={path} className="flex items-center gap-3 p-2.5 pl-3">
+                          {icons[path as keyof typeof icons]}
+                          <span className={`${isCurrentActive ? 'font-medium text-primary' : ''}`}>
+                            {labels[path as keyof typeof labels]}
+                          </span>
+                          {isCurrentActive && (
+                            <div
+                              className="absolute left-0 w-1 h-6 bg-primary rounded-r-full"
+                            />
+                          )}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </div>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Pro Features Teaser */}
+        {mounted && (
+          <div
+            className="mt-8 mx-3 p-4 rounded-xl bg-gradient-to-br from-primary/10 to-purple-500/10 border border-primary/20 animate-fadeIn"
+            style={{ animationDelay: "800ms" }}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              <span className="font-medium">Premium Features</span>
+            </div>
+            <p className="text-sm text-muted-foreground mb-3">Get advanced reports, insights and AI recommendations.</p>
+            <Button size="sm" variant="outline" className="w-full bg-background/80 hover:bg-background">
+              Upgrade Now
+            </Button>
+          </div>
+        )}
       </SidebarContent>
       
       {/* Footer with user profile or auth options */}
-      <SidebarFooter className="p-4 border-t">
+      <SidebarFooter className="p-4 border-t border-border/30 bg-muted/30 backdrop-blur-sm">
         {user ? (
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full h-8 w-8">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback>{getInitials()}</AvatarFallback>
+                  <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 p-0 relative overflow-hidden ring-2 ring-primary/10 hover:ring-primary/30 transition-all duration-200">
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback className="bg-gradient-to-br from-primary to-purple-600 text-primary-foreground font-medium">
+                        {getInitials()}
+                      </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => navigate('/profile')}>
-                    <User className="mr-2 h-4 w-4" />
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="flex flex-col p-2 gap-1.5 border-b pb-2 mb-1">
+                    <span className="font-medium">{user.email}</span>
+                    {user.email && <span className="text-xs text-muted-foreground">{user.email}</span>}
+                  </div>
+                  <DropdownMenuItem onClick={() => navigate('/profile')} className="py-2 cursor-pointer">
+                    <User className="mr-2 h-4 w-4 text-primary" />
                     <span>Profile</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleSignOut}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Sign out</span>
+                  <DropdownMenuItem onClick={() => navigate('/settings')} className="py-2 cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4 text-primary" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleSignOut} className="py-2 cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4 text-destructive" />
+                    <span className="text-destructive">Sign out</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              {user.email && <span className="ml-2 text-sm">{user.email}</span>}
+              {user.email && (
+                <div className="ml-3 flex flex-col">
+                  <span className="text-sm font-medium">User</span>
+                  <span className="text-xs text-muted-foreground">{user.email}</span>
+                </div>
+              )}
             </div>
           </div>
         ) : (
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => navigate('/auth')}>
+          <div className="flex flex-col gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate('/auth')} className="w-full justify-start">
+              <User className="mr-2 h-4 w-4" />
               Sign In
             </Button>
-            <Button size="sm" onClick={() => navigate('/auth')}>
+            <Button size="sm" onClick={() => navigate('/auth')} className="w-full bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-700">
               Get Started
             </Button>
           </div>
