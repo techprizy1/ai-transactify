@@ -31,9 +31,9 @@ interface InvoiceData {
 }
 
 interface BusinessInfo {
-  business_name: string;
-  business_address: string;
-  contact_number: string;
+  business_name: string | null;
+  business_address: string | null;
+  contact_number: string | null;
 }
 
 serve(async (req) => {
