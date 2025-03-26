@@ -4,6 +4,8 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/AppSidebar';
 import TransactionHistory from '@/components/TransactionHistory';
 import { Transaction } from '@/lib/types';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
 import { 
   Table,
   TableBody,
@@ -17,28 +19,39 @@ import {
 const PurchaseReport = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
   
   useEffect(() => {
-    // Load transactions from local storage
-    const savedTransactions = localStorage.getItem('accountai-transactions');
-    if (savedTransactions) {
+    const fetchPurchaseTransactions = async () => {
       try {
-        const allTransactions = JSON.parse(savedTransactions);
-        setTransactions(allTransactions);
+        const { data, error } = await supabase
+          .from('transactions')
+          .select('*')
+          .in('type', ['expense', 'purchase'])
+          .order('created_at', { ascending: false });
+          
+        if (error) {
+          throw error;
+        }
+        
+        setTransactions(data as Transaction[]);
       } catch (error) {
-        console.error('Failed to parse saved transactions:', error);
+        console.error('Failed to fetch purchase transactions:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load purchase data",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
       }
-    }
-    setLoading(false);
-  }, []);
-  
-  // Filter purchase-related transactions
-  const purchaseTransactions = transactions.filter(
-    transaction => transaction.type === 'expense' || transaction.type === 'purchase'
-  );
+    };
+    
+    fetchPurchaseTransactions();
+  }, [toast]);
   
   // Calculate total purchases
-  const totalPurchases = purchaseTransactions.reduce(
+  const totalPurchases = transactions.reduce(
     (sum, transaction) => sum + transaction.amount, 
     0
   );
@@ -60,7 +73,7 @@ const PurchaseReport = () => {
               <div className="glass-panel p-6 text-center">
                 <p>Loading purchase data...</p>
               </div>
-            ) : purchaseTransactions.length > 0 ? (
+            ) : transactions.length > 0 ? (
               <div className="space-y-8">
                 <div className="glass-panel p-6">
                   <h2 className="text-xl font-semibold mb-4">Purchase Summary</h2>
@@ -78,12 +91,12 @@ const PurchaseReport = () => {
                       </TableRow>
                       <TableRow>
                         <TableCell>Number of Transactions</TableCell>
-                        <TableCell className="text-right font-medium">{purchaseTransactions.length}</TableCell>
+                        <TableCell className="text-right font-medium">{transactions.length}</TableCell>
                       </TableRow>
                       <TableRow>
                         <TableCell>Average Purchase</TableCell>
                         <TableCell className="text-right font-medium">
-                          ₹{(totalPurchases / (purchaseTransactions.length || 1)).toFixed(2)}
+                          ₹{(totalPurchases / (transactions.length || 1)).toFixed(2)}
                         </TableCell>
                       </TableRow>
                     </TableBody>
@@ -91,9 +104,10 @@ const PurchaseReport = () => {
                 </div>
                 
                 <TransactionHistory 
-                  transactions={purchaseTransactions} 
+                  transactions={transactions} 
                   title="Purchase Transactions" 
                   filterTypes={['expense', 'purchase']}
+                  fetchTransactions={false}
                 />
               </div>
             ) : (

@@ -1,32 +1,74 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Transaction, TransactionType } from '@/lib/types';
 import TransactionCard from './TransactionCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Filter } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
 
 interface TransactionHistoryProps {
   transactions: Transaction[];
   title?: string;
   filterTypes?: TransactionType[];
+  fetchTransactions?: boolean;
 }
 
 const TransactionHistory = ({ 
-  transactions, 
+  transactions: initialTransactions, 
   title = "Transaction History",
-  filterTypes 
+  filterTypes,
+  fetchTransactions = false
 }: TransactionHistoryProps) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
   
-  // Filter by search term and optionally by transaction type
+  useEffect(() => {
+    if (!fetchTransactions) {
+      setTransactions(initialTransactions);
+      return;
+    }
+    
+    const getTransactions = async () => {
+      setLoading(true);
+      try {
+        let query = supabase.from('transactions').select('*');
+        
+        if (filterTypes && filterTypes.length > 0) {
+          query = query.in('type', filterTypes);
+        }
+        
+        const { data, error } = await query.order('created_at', { ascending: false });
+        
+        if (error) {
+          throw error;
+        }
+        
+        setTransactions(data as Transaction[]);
+      } catch (error) {
+        console.error('Error fetching transactions:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch transactions",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    getTransactions();
+  }, [fetchTransactions, filterTypes, initialTransactions, toast]);
+  
+  // Filter by search term
   const filteredTransactions = transactions.filter((transaction) => {
     const matchesSearch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       transaction.category.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesType = !filterTypes || filterTypes.includes(transaction.type);
-    
-    return matchesSearch && matchesType;
+    return matchesSearch;
   });
   
   return (
@@ -50,7 +92,11 @@ const TransactionHistory = ({
         </div>
       </div>
       
-      {filteredTransactions.length > 0 ? (
+      {loading ? (
+        <div className="text-center py-10">
+          <p className="text-muted-foreground">Loading transactions...</p>
+        </div>
+      ) : filteredTransactions.length > 0 ? (
         <div className="space-y-3">
           {filteredTransactions.map((transaction) => (
             <TransactionCard key={transaction.id} transaction={transaction} />

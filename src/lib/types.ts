@@ -7,6 +7,7 @@ export interface Transaction {
   category: string;
   date: string;
   created_at: string;
+  user_id?: string;
 }
 
 export type TransactionType = 'income' | 'expense' | 'purchase' | 'sale';

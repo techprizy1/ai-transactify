@@ -6,31 +6,47 @@ import TransactionInput from '@/components/TransactionInput';
 import TransactionHistory from '@/components/TransactionHistory';
 import { Transaction, AITransactionResponse } from '@/lib/types';
 import { toast } from 'sonner';
-
-// Create a local storage key for transactions
-const TRANSACTIONS_STORAGE_KEY = 'accountai-transactions';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 
 const Transactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
   
-  // Load transactions from local storage on component mount
+  // Load transactions from database on component mount
   useEffect(() => {
-    const savedTransactions = localStorage.getItem(TRANSACTIONS_STORAGE_KEY);
-    if (savedTransactions) {
+    const fetchTransactions = async () => {
+      if (!user) return;
+      
       try {
-        setTransactions(JSON.parse(savedTransactions));
+        const { data, error } = await supabase
+          .from('transactions')
+          .select('*')
+          .order('created_at', { ascending: false });
+          
+        if (error) {
+          throw error;
+        }
+        
+        setTransactions(data as Transaction[]);
       } catch (error) {
-        console.error('Failed to parse saved transactions:', error);
+        console.error('Failed to fetch transactions:', error);
+        toast.error('Failed to load transactions');
+      } finally {
+        setLoading(false);
       }
+    };
+    
+    fetchTransactions();
+  }, [user]);
+  
+  const handleTransactionCreated = async (aiResponse: AITransactionResponse) => {
+    if (!user) {
+      toast.error('You must be logged in to create transactions');
+      return;
     }
-  }, []);
-  
-  // Save transactions to local storage whenever they change
-  useEffect(() => {
-    localStorage.setItem(TRANSACTIONS_STORAGE_KEY, JSON.stringify(transactions));
-  }, [transactions]);
-  
-  const handleTransactionCreated = (aiResponse: AITransactionResponse) => {
+    
     const newTransaction: Transaction = {
       id: crypto.randomUUID(),
       description: aiResponse.description,
@@ -39,9 +55,42 @@ const Transactions = () => {
       category: aiResponse.category,
       date: aiResponse.date,
       created_at: new Date().toISOString(),
+      user_id: user.id
     };
     
-    setTransactions([newTransaction, ...transactions]);
+    try {
+      // Insert the transaction into the database
+      const { error } = await supabase
+        .from('transactions')
+        .insert([{
+          description: newTransaction.description,
+          amount: newTransaction.amount,
+          type: newTransaction.type,
+          category: newTransaction.category,
+          date: newTransaction.date,
+          user_id: user.id
+        }]);
+        
+      if (error) {
+        throw error;
+      }
+      
+      // Refresh the transactions list
+      const { data, error: fetchError } = await supabase
+        .from('transactions')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (fetchError) {
+        throw fetchError;
+      }
+      
+      setTransactions(data as Transaction[]);
+      toast.success('Transaction added successfully');
+    } catch (error) {
+      console.error('Error adding transaction:', error);
+      toast.error('Failed to add transaction');
+    }
   };
   
   return (
@@ -87,7 +136,10 @@ const Transactions = () => {
               </div>
               
               <div>
-                <TransactionHistory transactions={transactions} />
+                <TransactionHistory 
+                  transactions={transactions} 
+                  fetchTransactions={true}
+                />
               </div>
             </div>
           </main>

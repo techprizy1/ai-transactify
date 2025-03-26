@@ -4,6 +4,8 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/AppSidebar';
 import TransactionHistory from '@/components/TransactionHistory';
 import { Transaction } from '@/lib/types';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
 import { 
   Table,
   TableBody,
@@ -17,28 +19,39 @@ import {
 const SalesReport = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
   
   useEffect(() => {
-    // Load transactions from local storage
-    const savedTransactions = localStorage.getItem('accountai-transactions');
-    if (savedTransactions) {
+    const fetchSalesTransactions = async () => {
       try {
-        const allTransactions = JSON.parse(savedTransactions);
-        setTransactions(allTransactions);
+        const { data, error } = await supabase
+          .from('transactions')
+          .select('*')
+          .in('type', ['income', 'sale'])
+          .order('created_at', { ascending: false });
+          
+        if (error) {
+          throw error;
+        }
+        
+        setTransactions(data as Transaction[]);
       } catch (error) {
-        console.error('Failed to parse saved transactions:', error);
+        console.error('Failed to fetch sales transactions:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load sales data",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
       }
-    }
-    setLoading(false);
-  }, []);
-  
-  // Filter sales-related transactions
-  const salesTransactions = transactions.filter(
-    transaction => transaction.type === 'income' || transaction.type === 'sale'
-  );
+    };
+    
+    fetchSalesTransactions();
+  }, [toast]);
   
   // Calculate total sales
-  const totalSales = salesTransactions.reduce(
+  const totalSales = transactions.reduce(
     (sum, transaction) => sum + transaction.amount, 
     0
   );
@@ -60,7 +73,7 @@ const SalesReport = () => {
               <div className="glass-panel p-6 text-center">
                 <p>Loading sales data...</p>
               </div>
-            ) : salesTransactions.length > 0 ? (
+            ) : transactions.length > 0 ? (
               <div className="space-y-8">
                 <div className="glass-panel p-6">
                   <h2 className="text-xl font-semibold mb-4">Sales Summary</h2>
@@ -78,12 +91,12 @@ const SalesReport = () => {
                       </TableRow>
                       <TableRow>
                         <TableCell>Number of Transactions</TableCell>
-                        <TableCell className="text-right font-medium">{salesTransactions.length}</TableCell>
+                        <TableCell className="text-right font-medium">{transactions.length}</TableCell>
                       </TableRow>
                       <TableRow>
                         <TableCell>Average Sale</TableCell>
                         <TableCell className="text-right font-medium">
-                          ₹{(totalSales / (salesTransactions.length || 1)).toFixed(2)}
+                          ₹{(totalSales / (transactions.length || 1)).toFixed(2)}
                         </TableCell>
                       </TableRow>
                     </TableBody>
@@ -91,9 +104,10 @@ const SalesReport = () => {
                 </div>
                 
                 <TransactionHistory 
-                  transactions={salesTransactions} 
+                  transactions={transactions} 
                   title="Sales Transactions" 
                   filterTypes={['income', 'sale']}
+                  fetchTransactions={false}
                 />
               </div>
             ) : (
