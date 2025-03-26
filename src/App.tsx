@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 import SalesReport from "./pages/SalesReport";
 import PurchaseOrders from "./pages/PurchaseOrders";
 import PurchaseReport from "./pages/PurchaseReport";
+import ExpenseReport from "./pages/ExpenseReport";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,11 @@ const App = () => (
             <Route path="/purchase-report" element={
               <ProtectedRoute>
                 <PurchaseReport />
+              </ProtectedRoute>
+            } />
+            <Route path="/expense-report" element={
+              <ProtectedRoute>
+                <ExpenseReport />
               </ProtectedRoute>
             } />
             <Route path="/profile" element={

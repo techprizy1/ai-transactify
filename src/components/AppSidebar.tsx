@@ -20,7 +20,8 @@ import {
   TrendingUp, 
   TrendingDown,
   User,
-  LogOut
+  LogOut,
+  Receipt
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/context/AuthContext';
@@ -131,6 +132,23 @@ export function AppSidebar() {
                   <Link to="/purchase-report">
                     <TrendingDown />
                     <span>Purchase Report</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Expense Group - NEW */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Expense</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive('/expense-report')} tooltip="Expense Report">
+                  <Link to="/expense-report">
+                    <Receipt />
+                    <span>Expense Report</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
