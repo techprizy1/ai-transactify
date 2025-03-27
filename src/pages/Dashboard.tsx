@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import { Transaction } from '@/lib/types';
 import TransactionCard from '@/components/TransactionCard';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { ArrowUp, ArrowDown, DollarSign, Calculator, TrendingUp, TrendingDown } from 'lucide-react';
+import { ArrowUp, ArrowDown, DollarSign, Calculator, TrendingUp, TrendingDown, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 
@@ -230,7 +231,7 @@ const Dashboard = () => {
           </Card>
         </div>
         
-        <div className="grid gap-6 md:grid-cols-2 mb-8">
+        <div className="grid gap-6 md:grid-cols-3 mb-8">
           <Card className="animate-fade-in-up glass-panel" style={{ animationDelay: '0.3s' }}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -284,9 +285,36 @@ const Dashboard = () => {
               </Button>
             </CardFooter>
           </Card>
+          
+          <Card className="animate-fade-in-up glass-panel" style={{ animationDelay: '0.5s' }}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Receipt className="h-5 w-5 text-purple-500" />
+                Expense Summary
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                ₹{transactions
+                  .filter(t => t.type === 'expense')
+                  .reduce((sum, t) => sum + t.amount, 0).toFixed(2)}
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                {transactions.filter(t => t.type === 'expense').length} transactions
+              </p>
+            </CardContent>
+            <CardFooter>
+              <Button asChild variant="outline" className="w-full">
+                <Link to="/expense-report" className="flex items-center justify-center gap-2">
+                  <Receipt className="h-4 w-4" />
+                  View Expense Report
+                </Link>
+              </Button>
+            </CardFooter>
+          </Card>
         </div>
         
-        <Card className="animate-fade-in-up glass-panel" style={{ animationDelay: '0.5s' }}>
+        <Card className="animate-fade-in-up glass-panel" style={{ animationDelay: '0.6s' }}>
           <CardHeader>
             <CardTitle>Recent Transactions</CardTitle>
           </CardHeader>
