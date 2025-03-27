@@ -5,7 +5,7 @@ import { Transaction } from '@/lib/types';
 import TransactionCard from '@/components/TransactionCard';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { ArrowUp, ArrowDown, DollarSign, Calculator, TrendingUp, TrendingDown, Receipt } from 'lucide-react';
+import { ArrowUp, DollarSign, Calculator, TrendingUp, TrendingDown, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 
@@ -101,24 +101,23 @@ const Dashboard = () => {
     
   const netProfit = totalIncome - totalExpense;
   
-  const categoryData = transactions.reduce((acc, transaction) => {
-    const existingCategory = acc.find(cat => cat.name === transaction.category);
-    if (existingCategory) {
-      existingCategory.value += transaction.amount;
-    } else {
-      acc.push({ name: transaction.category, value: transaction.amount });
-    }
-    return acc;
-  }, [] as { name: string; value: number }[]);
+  // Count transactions by type
+  const salesCount = transactions.filter(t => t.type === 'income' || t.type === 'sale').length;
+  const purchaseCount = transactions.filter(t => t.type === 'purchase').length;
+  const expenseCount = transactions.filter(t => t.type === 'expense').length;
   
-  const typeData = [
-    { name: 'Income', value: transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0) },
-    { name: 'Expense', value: transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0) },
-    { name: 'Purchase', value: transactions.filter(t => t.type === 'purchase').reduce((sum, t) => sum + t.amount, 0) },
-    { name: 'Sale', value: transactions.filter(t => t.type === 'sale').reduce((sum, t) => sum + t.amount, 0) },
-  ].filter(item => item.value > 0);
-  
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A569BD', '#5DADE2', '#48C9B0'];
+  // Calculate totals by type
+  const salesTotal = transactions
+    .filter(t => t.type === 'income' || t.type === 'sale')
+    .reduce((sum, t) => sum + t.amount, 0);
+    
+  const purchaseTotal = transactions
+    .filter(t => t.type === 'purchase')
+    .reduce((sum, t) => sum + t.amount, 0);
+    
+  const expenseTotal = transactions
+    .filter(t => t.type === 'expense')
+    .reduce((sum, t) => sum + t.amount, 0);
   
   return (
     <div className="min-h-screen pt-20">
@@ -140,7 +139,6 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600 dark:text-green-400">₹{totalIncome.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground">+12.5% from last month</p>
             </CardContent>
           </Card>
           
@@ -151,7 +149,6 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-red-600 dark:text-red-400">₹{totalExpense.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground">+5.2% from last month</p>
             </CardContent>
           </Card>
           
@@ -164,90 +161,37 @@ const Dashboard = () => {
               <div className={`text-2xl font-bold ${netProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                 ₹{netProfit.toFixed(2)}
               </div>
-              <p className="text-xs text-muted-foreground">+8.1% from last month</p>
             </CardContent>
           </Card>
         </div>
         
-        <div className="grid gap-6 md:grid-cols-2 mb-8">
-          <Card className="animate-fade-in-up glass-panel" style={{ animationDelay: '0.3s' }}>
-            <CardHeader>
-              <CardTitle>Transactions by Category</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={categoryData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {categoryData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value) => `$${value}`} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="animate-fade-in-up glass-panel" style={{ animationDelay: '0.4s' }}>
-            <CardHeader>
-              <CardTitle>Transactions by Type</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={typeData}
-                    margin={{
-                      top: 5,
-                      right: 30,
-                      left: 20,
-                      bottom: 5,
-                    }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip formatter={(value) => `$${value}`} />
-                    <Bar dataKey="value" fill="#8884d8">
-                      {typeData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
+        {/* Main Report Cards */}
         <div className="grid gap-6 md:grid-cols-3 mb-8">
-          <Card className="animate-fade-in-up glass-panel" style={{ animationDelay: '0.3s' }}>
+          {/* Sales Report Card */}
+          <Card className="animate-fade-in-up glass-panel hover:shadow-lg transition-all duration-300">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-green-500" />
                 Sales Summary
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pb-4">
               <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                ₹{transactions
-                  .filter(t => t.type === 'income' || t.type === 'sale')
-                  .reduce((sum, t) => sum + t.amount, 0).toFixed(2)}
+                ₹{salesTotal.toFixed(2)}
               </div>
               <p className="text-sm text-muted-foreground mt-1">
-                {transactions.filter(t => t.type === 'income' || t.type === 'sale').length} transactions
+                {salesCount} transactions
               </p>
+              <div className="mt-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Daily Average</span>
+                  <span className="font-medium">₹{(salesTotal / 30).toFixed(2)}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="bg-green-500 h-2 rounded-full" style={{ width: '75%' }}></div>
+                </div>
+                <p className="text-xs text-muted-foreground">75% of monthly target</p>
+              </div>
             </CardContent>
             <CardFooter>
               <Button asChild variant="outline" className="w-full">
@@ -259,22 +203,31 @@ const Dashboard = () => {
             </CardFooter>
           </Card>
           
-          <Card className="animate-fade-in-up glass-panel" style={{ animationDelay: '0.4s' }}>
+          {/* Purchase Report Card */}
+          <Card className="animate-fade-in-up glass-panel hover:shadow-lg transition-all duration-300" style={{ animationDelay: '0.1s' }}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingDown className="h-5 w-5 text-amber-500" />
                 Purchase Summary
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pb-4">
               <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
-                ₹{transactions
-                  .filter(t => t.type === 'expense' || t.type === 'purchase')
-                  .reduce((sum, t) => sum + t.amount, 0).toFixed(2)}
+                ₹{purchaseTotal.toFixed(2)}
               </div>
               <p className="text-sm text-muted-foreground mt-1">
-                {transactions.filter(t => t.type === 'expense' || t.type === 'purchase').length} transactions
+                {purchaseCount} transactions
               </p>
+              <div className="mt-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Budget Utilization</span>
+                  <span className="font-medium">60%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="bg-amber-500 h-2 rounded-full" style={{ width: '60%' }}></div>
+                </div>
+                <p className="text-xs text-muted-foreground">40% of budget remaining</p>
+              </div>
             </CardContent>
             <CardFooter>
               <Button asChild variant="outline" className="w-full">
@@ -286,22 +239,31 @@ const Dashboard = () => {
             </CardFooter>
           </Card>
           
-          <Card className="animate-fade-in-up glass-panel" style={{ animationDelay: '0.5s' }}>
+          {/* Expense Report Card */}
+          <Card className="animate-fade-in-up glass-panel hover:shadow-lg transition-all duration-300" style={{ animationDelay: '0.2s' }}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Receipt className="h-5 w-5 text-purple-500" />
                 Expense Summary
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pb-4">
               <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                ₹{transactions
-                  .filter(t => t.type === 'expense')
-                  .reduce((sum, t) => sum + t.amount, 0).toFixed(2)}
+                ₹{expenseTotal.toFixed(2)}
               </div>
               <p className="text-sm text-muted-foreground mt-1">
-                {transactions.filter(t => t.type === 'expense').length} transactions
+                {expenseCount} transactions
               </p>
+              <div className="mt-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Monthly Comparison</span>
+                  <span className="font-medium">+8%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="bg-purple-500 h-2 rounded-full" style={{ width: '85%' }}></div>
+                </div>
+                <p className="text-xs text-muted-foreground">8% higher than last month</p>
+              </div>
             </CardContent>
             <CardFooter>
               <Button asChild variant="outline" className="w-full">
@@ -314,7 +276,7 @@ const Dashboard = () => {
           </Card>
         </div>
         
-        <Card className="animate-fade-in-up glass-panel" style={{ animationDelay: '0.6s' }}>
+        <Card className="animate-fade-in-up glass-panel" style={{ animationDelay: '0.3s' }}>
           <CardHeader>
             <CardTitle>Recent Transactions</CardTitle>
           </CardHeader>
@@ -325,6 +287,13 @@ const Dashboard = () => {
               ))}
             </div>
           </CardContent>
+          <CardFooter>
+            <Button asChild variant="outline" className="w-full">
+              <Link to="/transactions" className="flex items-center justify-center gap-2">
+                <span>View All Transactions</span>
+              </Link>
+            </Button>
+          </CardFooter>
         </Card>
       </main>
     </div>
