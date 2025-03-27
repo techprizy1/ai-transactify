@@ -17,6 +17,8 @@ import SalesReport from "./pages/SalesReport";
 import PurchaseOrders from "./pages/PurchaseOrders";
 import PurchaseReport from "./pages/PurchaseReport";
 import ExpenseReport from "./pages/ExpenseReport";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import AppSidebar from "@/components/AppSidebar";
 
 const queryClient = new QueryClient();
 
@@ -28,49 +30,92 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            {/* Public routes without sidebar */}
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="*" element={<NotFound />} />
+            
+            {/* Protected routes with sidebar */}
             <Route path="/dashboard" element={
               <ProtectedRoute>
-                <Dashboard />
+                <SidebarProvider>
+                  <div className="flex w-full min-h-screen">
+                    <AppSidebar />
+                    <Dashboard />
+                  </div>
+                </SidebarProvider>
               </ProtectedRoute>
             } />
             <Route path="/transactions" element={
               <ProtectedRoute>
-                <Transactions />
+                <SidebarProvider>
+                  <div className="flex w-full min-h-screen">
+                    <AppSidebar />
+                    <Transactions />
+                  </div>
+                </SidebarProvider>
               </ProtectedRoute>
             } />
             <Route path="/invoice" element={
               <ProtectedRoute>
-                <Invoice />
+                <SidebarProvider>
+                  <div className="flex w-full min-h-screen">
+                    <AppSidebar />
+                    <Invoice />
+                  </div>
+                </SidebarProvider>
               </ProtectedRoute>
             } />
             <Route path="/sales-report" element={
               <ProtectedRoute>
-                <SalesReport />
+                <SidebarProvider>
+                  <div className="flex w-full min-h-screen">
+                    <AppSidebar />
+                    <SalesReport />
+                  </div>
+                </SidebarProvider>
               </ProtectedRoute>
             } />
             <Route path="/purchase-orders" element={
               <ProtectedRoute>
-                <PurchaseOrders />
+                <SidebarProvider>
+                  <div className="flex w-full min-h-screen">
+                    <AppSidebar />
+                    <PurchaseOrders />
+                  </div>
+                </SidebarProvider>
               </ProtectedRoute>
             } />
             <Route path="/purchase-report" element={
               <ProtectedRoute>
-                <PurchaseReport />
+                <SidebarProvider>
+                  <div className="flex w-full min-h-screen">
+                    <AppSidebar />
+                    <PurchaseReport />
+                  </div>
+                </SidebarProvider>
               </ProtectedRoute>
             } />
             <Route path="/expense-report" element={
               <ProtectedRoute>
-                <ExpenseReport />
+                <SidebarProvider>
+                  <div className="flex w-full min-h-screen">
+                    <AppSidebar />
+                    <ExpenseReport />
+                  </div>
+                </SidebarProvider>
               </ProtectedRoute>
             } />
             <Route path="/profile" element={
               <ProtectedRoute>
-                <Profile />
+                <SidebarProvider>
+                  <div className="flex w-full min-h-screen">
+                    <AppSidebar />
+                    <Profile />
+                  </div>
+                </SidebarProvider>
               </ProtectedRoute>
             } />
-            <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
