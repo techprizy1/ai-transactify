@@ -1,18 +1,17 @@
-
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import { Transaction } from '@/lib/types';
 import TransactionCard from '@/components/TransactionCard';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { ArrowUp, ArrowDown, DollarSign, Calculator } from 'lucide-react';
+import { ArrowUp, ArrowDown, DollarSign, Calculator, TrendingUp, TrendingDown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   
   useEffect(() => {
-    // In a real app, this would fetch from an API
-    // For demo, we'll create mock data
     const mockTransactions: Transaction[] = [
       {
         id: '1',
@@ -91,7 +90,6 @@ const Dashboard = () => {
     setTransactions(mockTransactions);
   }, []);
   
-  // Calculate summary data
   const totalIncome = transactions
     .filter(t => t.type === 'income' || t.type === 'sale')
     .reduce((sum, t) => sum + t.amount, 0);
@@ -102,7 +100,6 @@ const Dashboard = () => {
     
   const netProfit = totalIncome - totalExpense;
   
-  // Prepare chart data
   const categoryData = transactions.reduce((acc, transaction) => {
     const existingCategory = acc.find(cat => cat.name === transaction.category);
     if (existingCategory) {
@@ -230,6 +227,62 @@ const Dashboard = () => {
                 </ResponsiveContainer>
               </div>
             </CardContent>
+          </Card>
+        </div>
+        
+        <div className="grid gap-6 md:grid-cols-2 mb-8">
+          <Card className="animate-fade-in-up glass-panel" style={{ animationDelay: '0.3s' }}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-green-500" />
+                Sales Summary
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                ₹{transactions
+                  .filter(t => t.type === 'income' || t.type === 'sale')
+                  .reduce((sum, t) => sum + t.amount, 0).toFixed(2)}
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                {transactions.filter(t => t.type === 'income' || t.type === 'sale').length} transactions
+              </p>
+            </CardContent>
+            <CardFooter>
+              <Button asChild variant="outline" className="w-full">
+                <Link to="/sales-report" className="flex items-center justify-center gap-2">
+                  <TrendingUp className="h-4 w-4" />
+                  View Sales Report
+                </Link>
+              </Button>
+            </CardFooter>
+          </Card>
+          
+          <Card className="animate-fade-in-up glass-panel" style={{ animationDelay: '0.4s' }}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingDown className="h-5 w-5 text-amber-500" />
+                Purchase Summary
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                ₹{transactions
+                  .filter(t => t.type === 'expense' || t.type === 'purchase')
+                  .reduce((sum, t) => sum + t.amount, 0).toFixed(2)}
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                {transactions.filter(t => t.type === 'expense' || t.type === 'purchase').length} transactions
+              </p>
+            </CardContent>
+            <CardFooter>
+              <Button asChild variant="outline" className="w-full">
+                <Link to="/purchase-report" className="flex items-center justify-center gap-2">
+                  <TrendingDown className="h-4 w-4" />
+                  View Purchase Report
+                </Link>
+              </Button>
+            </CardFooter>
           </Card>
         </div>
         
