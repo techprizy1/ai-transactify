@@ -277,13 +277,18 @@ const Dashboard = () => {
         </div>
         
         <Card className="animate-fade-in-up glass-panel" style={{ animationDelay: '0.3s' }}>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Recent Transactions</CardTitle>
+            <Button asChild variant="link" size="sm">
+              <Link to="/transactions" className="text-primary">View all</Link>
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {transactions.slice(0, 5).map((transaction) => (
-                <TransactionCard key={transaction.id} transaction={transaction} />
+                <Link key={transaction.id} to="/transactions" className="block hover:bg-accent/20 rounded-md transition-colors">
+                  <TransactionCard transaction={transaction} />
+                </Link>
               ))}
             </div>
           </CardContent>
