@@ -3,6 +3,7 @@ import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, Table
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
+import { Building2, User, CalendarDays, CalendarClock, Banknote } from "lucide-react";
 
 interface InvoiceItem {
   description: string;
@@ -95,7 +96,7 @@ const InvoicePreview = ({ invoice }: InvoicePreviewProps) => {
   }, [user]);
 
   return (
-    <div className="bg-white rounded-lg overflow-hidden border p-6 print:border-0 print:p-1 print:shadow-none">
+    <div className="bg-white rounded-lg overflow-hidden border p-6 print:border-0 print:p-1 print:shadow-none animate-fade-in">
       <div className="flex flex-col space-y-6">
         {/* Header */}
         <div className="flex justify-between items-start">
@@ -106,7 +107,10 @@ const InvoicePreview = ({ invoice }: InvoicePreviewProps) => {
             </div>
           </div>
           <div className="text-right">
-            <div className="text-gray-900 font-medium">{businessInfo.business_name || 'Your Company Name'}</div>
+            <div className="text-gray-900 font-medium flex items-center justify-end">
+              <Building2 className="h-4 w-4 mr-1 text-primary/70" />
+              {businessInfo.business_name || 'Your Company Name'}
+            </div>
             <div className="text-sm text-gray-500 mt-1">
               <p>{businessInfo.business_address || 'Business Address Not Set'}</p>
               <p>{businessInfo.contact_number || 'Contact Number Not Set'}</p>
@@ -117,7 +121,10 @@ const InvoicePreview = ({ invoice }: InvoicePreviewProps) => {
         {/* Dates & Client Info */}
         <div className="grid sm:grid-cols-2 gap-6 pt-4 border-t">
           <div>
-            <h2 className="text-sm font-semibold text-gray-500 uppercase mb-2">Bill To</h2>
+            <h2 className="text-sm font-semibold text-gray-500 uppercase mb-2 flex items-center">
+              <User className="h-4 w-4 mr-1 text-primary/70" />
+              Bill To
+            </h2>
             <div className="text-gray-800">
               <p className="font-medium">{invoice.billTo.name}</p>
               <p className="whitespace-pre-line">{invoice.billTo.address}</p>
@@ -126,10 +133,16 @@ const InvoicePreview = ({ invoice }: InvoicePreviewProps) => {
           </div>
           <div className="sm:text-right">
             <div className="grid grid-cols-2 sm:grid-cols-2 gap-x-4 gap-y-2">
-              <div className="text-sm font-medium text-gray-500">Issue Date:</div>
+              <div className="text-sm font-medium text-gray-500 flex items-center justify-end sm:justify-start">
+                <CalendarDays className="h-4 w-4 mr-1 text-primary/70" />
+                Issue Date:
+              </div>
               <div className="text-gray-800">{formatDate(invoice.date)}</div>
               
-              <div className="text-sm font-medium text-gray-500">Due Date:</div>
+              <div className="text-sm font-medium text-gray-500 flex items-center justify-end sm:justify-start">
+                <CalendarClock className="h-4 w-4 mr-1 text-primary/70" />
+                Due Date:
+              </div>
               <div className="text-gray-800">{formatDate(invoice.dueDate)}</div>
             </div>
           </div>
@@ -148,7 +161,7 @@ const InvoicePreview = ({ invoice }: InvoicePreviewProps) => {
             </TableHeader>
             <TableBody>
               {invoice.items.map((item, i) => (
-                <TableRow key={i}>
+                <TableRow key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                   <TableCell className="font-medium">{item.description}</TableCell>
                   <TableCell className="text-right">{item.quantity}</TableCell>
                   <TableCell className="text-right">{formatCurrency(item.unitPrice)}</TableCell>
@@ -166,7 +179,10 @@ const InvoicePreview = ({ invoice }: InvoicePreviewProps) => {
                 <TableCell className="text-right">{formatCurrency(invoice.taxAmount)}</TableCell>
               </TableRow>
               <TableRow>
-                <TableCell colSpan={3} className="text-right font-semibold text-lg">Total</TableCell>
+                <TableCell colSpan={3} className="text-right font-semibold text-lg flex items-center justify-end">
+                  <Banknote className="h-4 w-4 mr-1 text-primary" />
+                  Total
+                </TableCell>
                 <TableCell className="text-right font-bold text-lg">{formatCurrency(invoice.total)}</TableCell>
               </TableRow>
             </TableFooter>

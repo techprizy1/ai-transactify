@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { PurchaseOrderData } from '@/lib/po-service';
 import { analyzePurchaseOrder } from '@/lib/po-service';
-import { SendHorizontal, Loader2 } from 'lucide-react';
+import { SendHorizontal, Loader2, FileText, LightbulbIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PurchaseOrderInputProps {
@@ -43,10 +43,14 @@ const PurchaseOrderInput = ({ onPurchaseOrderCreated }: PurchaseOrderInputProps)
   
   return (
     <div className="glass-panel p-6 animate-fade-in">
-      <h2 className="text-xl font-semibold mb-4">New Purchase Order</h2>
+      <h2 className="text-xl font-semibold mb-4 flex items-center">
+        <FileText className="h-5 w-5 mr-2 text-primary/70" />
+        New Purchase Order
+      </h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <label htmlFor="po-input" className="text-sm font-medium">
+          <label htmlFor="po-input" className="text-sm font-medium flex items-center">
+            <LightbulbIcon className="h-4 w-4 mr-1 text-yellow-500" />
             Describe your purchase order in natural language
           </label>
           <Textarea
@@ -55,14 +59,14 @@ const PurchaseOrderInput = ({ onPurchaseOrderCreated }: PurchaseOrderInputProps)
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             rows={4}
-            className="resize-none transition-all focus-visible:ring-primary/20 focus-visible:ring-offset-0"
+            className="resize-none transition-all focus-visible:ring-primary/20 focus-visible:ring-offset-0 bg-background"
           />
         </div>
         
         <div className="pt-2">
           <Button 
             type="submit" 
-            className="w-full relative overflow-hidden btn-hover-effect" 
+            className="w-full relative overflow-hidden group" 
             disabled={isAnalyzing || !prompt.trim()}
           >
             {isAnalyzing ? (
@@ -73,7 +77,7 @@ const PurchaseOrderInput = ({ onPurchaseOrderCreated }: PurchaseOrderInputProps)
             ) : (
               <>
                 Create purchase order
-                <SendHorizontal className="ml-2 h-4 w-4" />
+                <SendHorizontal className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </>
             )}
           </Button>
