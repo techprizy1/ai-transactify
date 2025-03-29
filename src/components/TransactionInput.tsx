@@ -4,21 +4,30 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { AITransactionResponse } from '@/lib/types';
 import { analyzeTransaction } from '@/lib/ai-service';
-import { SendHorizontal, Loader2 } from 'lucide-react';
+import { SendHorizontal, Loader2, LightbulbIcon, FileText } from 'lucide-react';
 import { toast } from 'sonner';
+import { Form, FormField, FormItem, FormControl } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { Label } from '@/components/ui/label';
 
 interface TransactionInputProps {
   onTransactionCreated: (transaction: AITransactionResponse) => void;
 }
 
 const TransactionInput = ({ onTransactionCreated }: TransactionInputProps) => {
-  const [prompt, setPrompt] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!prompt.trim()) {
+  const form = useForm({
+    defaultValues: {
+      prompt: ''
+    }
+  });
+
+  const { watch, setValue } = form;
+  const prompt = watch('prompt');
+  
+  const handleSubmit = async (values: { prompt: string }) => {
+    if (!values.prompt.trim()) {
       toast.error('Please enter a transaction description');
       return;
     }
@@ -26,11 +35,11 @@ const TransactionInput = ({ onTransactionCreated }: TransactionInputProps) => {
     setIsAnalyzing(true);
     
     try {
-      const result = await analyzeTransaction(prompt);
+      const result = await analyzeTransaction(values.prompt);
       
       if (result) {
         onTransactionCreated(result);
-        setPrompt('');
+        setValue('prompt', '');
         toast.success('Transaction analyzed successfully');
       }
     } catch (error) {
@@ -42,47 +51,79 @@ const TransactionInput = ({ onTransactionCreated }: TransactionInputProps) => {
   };
   
   return (
-    <div className="glass-panel p-6 animate-fade-in">
-      <h2 className="text-xl font-semibold mb-4">New Transaction</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <label htmlFor="transaction-input" className="text-sm font-medium">
-            Describe your transaction in natural language
-          </label>
-          <Textarea
-            id="transaction-input"
-            placeholder="Example: Paid ₹8500 for office supplies at Reliance Digital on March 15th"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            rows={4}
-            className="resize-none transition-all focus-visible:ring-primary/20 focus-visible:ring-offset-0"
-          />
-        </div>
-        
-        <div className="pt-2">
-          <Button 
-            type="submit" 
-            className="w-full relative overflow-hidden btn-hover-effect" 
-            disabled={isAnalyzing || !prompt.trim()}
-          >
-            {isAnalyzing ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Analyzing transaction...
-              </>
-            ) : (
-              <>
-                Analyze transaction
-                <SendHorizontal className="ml-2 h-4 w-4" />
-              </>
-            )}
-          </Button>
-        </div>
-        
-        <div className="mt-4 text-sm text-muted-foreground">
-          <p>Our AI will automatically categorize your transaction based on your description.</p>
-        </div>
-      </form>
+    <div className="glass-panel p-6 md:p-8 animate-fade-in">
+      <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+        <FileText className="h-5 w-5 text-primary/70" />
+        New Transaction
+      </h2>
+      
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
+          <div className="space-y-3">
+            <Label htmlFor="transaction-input" className="text-base font-medium flex items-center gap-1.5">
+              <LightbulbIcon className="h-4 w-4 text-yellow-500" />
+              Describe your transaction in natural language
+            </Label>
+            
+            <div className="relative rounded-xl border border-input bg-background focus-within:ring-1 focus-within:ring-primary/30 overflow-hidden transition-all">
+              <FormField
+                control={form.control}
+                name="prompt"
+                render={({ field }) => (
+                  <FormItem className="m-0">
+                    <FormControl>
+                      <Textarea
+                        id="transaction-input"
+                        placeholder="Example: Paid ₹8500 for office supplies at Reliance Digital on March 15th"
+                        className="min-h-[180px] text-base p-4 border-0 focus-visible:ring-0 resize-none shadow-none"
+                        {...field}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              
+              <div className="p-3 bg-muted/20 border-t border-input flex justify-between items-center">
+                <p className="text-xs text-muted-foreground italic">
+                  Include amount, merchant, date and category for best results
+                </p>
+                
+                <Button 
+                  type="submit" 
+                  className="relative overflow-hidden group h-9" 
+                  disabled={isAnalyzing || !prompt?.trim()}
+                  size="sm"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      Generate
+                      <SendHorizontal className="ml-2 h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </Form>
+      
+      <div className="mt-6 p-4 rounded-lg bg-muted/30 text-sm">
+        <p className="flex items-center gap-1.5 font-medium mb-2">
+          <LightbulbIcon className="h-4 w-4 text-yellow-500" />
+          AI will extract:
+        </p>
+        <ul className="space-y-1.5 text-muted-foreground ml-6 list-disc">
+          <li>Transaction amount and currency</li>
+          <li>Merchant or payee information</li>
+          <li>Date of transaction</li>
+          <li>Category and transaction type</li>
+        </ul>
+      </div>
     </div>
   );
 };
