@@ -16,6 +16,7 @@ interface PurchaseOrderPreviewProps {
 const PurchaseOrderPreview = ({ poData }: PurchaseOrderPreviewProps) => {
   const isMobile = useIsMobile();
   const printRef = useRef<HTMLDivElement>(null);
+  const downloadRef = useRef<HTMLDivElement>(null);
   
   if (!poData) {
     return (
@@ -36,7 +37,7 @@ const PurchaseOrderPreview = ({ poData }: PurchaseOrderPreviewProps) => {
   };
   
   const handleDownload = async () => {
-    if (!printRef.current) {
+    if (!downloadRef.current) {
       toast.error("Could not generate PDF");
       return;
     }
@@ -44,11 +45,18 @@ const PurchaseOrderPreview = ({ poData }: PurchaseOrderPreviewProps) => {
     try {
       toast.info("Generating PDF, please wait...");
       
-      const canvas = await html2canvas(printRef.current, { 
+      const canvas = await html2canvas(downloadRef.current, { 
         scale: 2,
         useCORS: true,
         logging: false,
-        backgroundColor: "#ffffff"
+        backgroundColor: "#ffffff",
+        windowWidth: 1200, // Fixed width to ensure consistent rendering
+        onclone: (document, element) => {
+          // Make sure all content is visible in the cloned element for PDF generation
+          element.style.height = 'auto';
+          element.style.overflow = 'visible';
+          element.style.width = '1200px';
+        }
       });
       
       const imgData = canvas.toDataURL('image/png');
@@ -59,9 +67,24 @@ const PurchaseOrderPreview = ({ poData }: PurchaseOrderPreviewProps) => {
       });
       
       const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
       const imgHeight = canvas.height * imgWidth / canvas.width;
       
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      let heightLeft = imgHeight;
+      let position = 0;
+      
+      // First page
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+      
+      // Add additional pages if needed
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+      
       pdf.save(`PO-${poData.supplier_name.replace(/\s+/g, '-')}.pdf`);
       
       toast.success("Purchase order downloaded successfully");
@@ -249,6 +272,140 @@ const PurchaseOrderPreview = ({ poData }: PurchaseOrderPreviewProps) => {
             <p className="text-xs text-gray-500 mb-8">Received By:</p>
             <div className="border-b border-gray-300 w-48"></div>
             <p className="text-xs mt-1 text-gray-600">Supplier Signature</p>
+          </div>
+        </div>
+      </div>
+      
+      {/* Modern downloadable template (hidden from view but used for PDF generation) */}
+      <div ref={downloadRef} className="hidden">
+        <div className="bg-white p-8" style={{ width: '1200px' }}>
+          {/* Modern header with gradient */}
+          <div style={{ borderBottom: '3px solid #f3f4f6', paddingBottom: '32px', marginBottom: '32px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: '#111827', marginBottom: '8px' }}>PURCHASE ORDER</h1>
+                <div style={{ background: 'linear-gradient(90deg, #10b981 0%, #059669 100%)', height: '6px', width: '80px', marginBottom: '16px' }}></div>
+                <div style={{ fontSize: '14px', color: '#4b5563' }}>
+                  <p style={{ fontWeight: '500', marginBottom: '4px' }}><span style={{ fontWeight: 'bold' }}>PO #:</span> {Math.floor(Math.random() * 9000) + 1000}</p>
+                  <p><span style={{ fontWeight: 'bold' }}>Issue Date:</span> {new Date().toLocaleDateString('en-IN', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })}</p>
+                </div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '8px' }}>
+                  Your Company Name
+                </div>
+                <div style={{ fontSize: '14px', color: '#4b5563', lineHeight: '1.5' }}>
+                  <p>123 Business Street, Business District</p>
+                  <p>City, State, ZIP</p>
+                  <p>Phone: +91 XXXX XXXX</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Purchase Order Info Boxes */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px', marginBottom: '32px' }}>
+            <div style={{ background: '#f9fafb', padding: '20px', borderRadius: '8px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#374151', marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
+                Supplier
+              </h3>
+              <div>
+                <p style={{ fontWeight: '500', fontSize: '16px', marginBottom: '8px', color: '#111827' }}>{poData.supplier_name}</p>
+                <p style={{ fontSize: '14px', color: '#4b5563' }}>Supplier ID: SUP-{Math.floor(Math.random() * 900) + 100}</p>
+              </div>
+            </div>
+            <div style={{ background: '#f9fafb', padding: '20px', borderRadius: '8px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#374151', marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
+                Delivery Details
+              </h3>
+              <div>
+                <p style={{ fontWeight: '500', fontSize: '16px', marginBottom: '8px', color: '#111827' }}>Expected delivery: {formatDate(poData.delivery_date)}</p>
+                <p style={{ fontSize: '14px', color: '#4b5563' }}>Payment terms: {poData.payment_terms}</p>
+              </div>
+            </div>
+            <div style={{ background: '#f9fafb', padding: '20px', borderRadius: '8px', gridColumn: '1 / -1' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#374151', marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
+                Shipping Address
+              </h3>
+              <div>
+                <p style={{ fontWeight: '500', fontSize: '16px', color: '#111827' }}>{poData.shipping_address}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Items Table */}
+          <div style={{ marginBottom: '32px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px', color: '#111827' }}>Order Items</h3>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+              <thead>
+                <tr style={{ background: '#f3f4f6' }}>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', borderBottom: '2px solid #e5e7eb', width: '40%' }}>Item Description</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: '600', borderBottom: '2px solid #e5e7eb' }}>Quantity</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: '600', borderBottom: '2px solid #e5e7eb' }}>Unit Price</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: '600', borderBottom: '2px solid #e5e7eb' }}>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {poData.items.map((item, index) => (
+                  <tr key={index} style={{ background: index % 2 === 0 ? '#ffffff' : '#f9fafb' }}>
+                    <td style={{ padding: '12px 16px', borderBottom: '1px solid #e5e7eb', fontWeight: '500' }}>{item.description}</td>
+                    <td style={{ padding: '12px 16px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>{item.quantity}</td>
+                    <td style={{ padding: '12px 16px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>{formatCurrency(item.unit_price)}</td>
+                    <td style={{ padding: '12px 16px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>{formatCurrency(item.amount)}</td>
+                  </tr>
+                ))}
+                <tr style={{ background: '#f3f4f6', fontWeight: '700' }}>
+                  <td colSpan={3} style={{ padding: '16px', textAlign: 'right', borderTop: '2px solid #e5e7eb' }}>Total:</td>
+                  <td style={{ padding: '16px', textAlign: 'right', borderTop: '2px solid #e5e7eb', color: '#047857' }}>{formatCurrency(poData.total_amount)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Terms & Notes */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px', marginBottom: '32px' }}>
+            <div>
+              <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>Terms & Conditions</h3>
+              <ul style={{ fontSize: '13px', color: '#4b5563', paddingLeft: '20px', lineHeight: '1.6' }}>
+                <li style={{ marginBottom: '4px' }}>All items must be delivered by the delivery date.</li>
+                <li style={{ marginBottom: '4px' }}>Payment will be processed according to the payment terms.</li>
+                <li style={{ marginBottom: '4px' }}>Goods received in damaged condition will be returned.</li>
+                <li>Please quote PO number in all correspondence.</li>
+              </ul>
+            </div>
+            <div>
+              <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>Notes</h3>
+              <p style={{ fontSize: '13px', color: '#4b5563', lineHeight: '1.6' }}>
+                This purchase order was generated by AI based on your description.
+                Please contact us if you have any questions about this order.
+              </p>
+            </div>
+          </div>
+          
+          {/* Signatures */}
+          <div style={{ marginTop: '48px', paddingTop: '24px', borderTop: '2px solid #f3f4f6', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
+            <div>
+              <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '32px' }}>Authorized By:</p>
+              <div style={{ borderBottom: '1px solid #d1d5db', width: '200px' }}></div>
+              <p style={{ fontSize: '12px', marginTop: '8px', color: '#6b7280' }}>Authorized Signature</p>
+            </div>
+            <div>
+              <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '32px' }}>Received By:</p>
+              <div style={{ borderBottom: '1px solid #d1d5db', width: '200px' }}></div>
+              <p style={{ fontSize: '12px', marginTop: '8px', color: '#6b7280' }}>Supplier Signature</p>
+            </div>
+            <div style={{ gridColumn: '1 / -1', marginTop: '24px', textAlign: 'center' }}>
+              <div style={{ display: 'inline-block' }}>
+                <div style={{ height: '4px', width: '120px', background: 'linear-gradient(90deg, #10b981 0%, #059669 100%)' }}></div>
+                <p style={{ fontSize: '13px', marginTop: '8px', color: '#047857', fontWeight: '500' }}>
+                  Thank you for your business!
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

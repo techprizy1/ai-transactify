@@ -71,6 +71,7 @@ const InvoicePreview = ({ invoice }: InvoicePreviewProps) => {
     contact_number: null
   });
   const printRef = useRef<HTMLDivElement>(null);
+  const downloadRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchBusinessInfo = async () => {
@@ -105,7 +106,7 @@ const InvoicePreview = ({ invoice }: InvoicePreviewProps) => {
   };
   
   const handleDownload = async () => {
-    if (!printRef.current) {
+    if (!downloadRef.current) {
       toast.error("Could not generate PDF");
       return;
     }
@@ -113,11 +114,18 @@ const InvoicePreview = ({ invoice }: InvoicePreviewProps) => {
     try {
       toast.info("Generating PDF, please wait...");
       
-      const canvas = await html2canvas(printRef.current, { 
+      const canvas = await html2canvas(downloadRef.current, { 
         scale: 2,
         useCORS: true,
         logging: false,
-        backgroundColor: "#ffffff"
+        backgroundColor: "#ffffff",
+        windowWidth: 1200, // Fixed width to ensure consistent rendering
+        onclone: (document, element) => {
+          // Make sure all content is visible in the cloned element for PDF generation
+          element.style.height = 'auto';
+          element.style.overflow = 'visible';
+          element.style.width = '1200px';
+        }
       });
       
       const imgData = canvas.toDataURL('image/png');
@@ -128,9 +136,24 @@ const InvoicePreview = ({ invoice }: InvoicePreviewProps) => {
       });
       
       const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
       const imgHeight = canvas.height * imgWidth / canvas.width;
       
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      let heightLeft = imgHeight;
+      let position = 0;
+      
+      // First page
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+      
+      // Add additional pages if needed
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+      
       pdf.save(`Invoice-${invoice.invoiceNumber}.pdf`);
       
       toast.success("Invoice downloaded successfully");
@@ -290,6 +313,141 @@ const InvoicePreview = ({ invoice }: InvoicePreviewProps) => {
             <p className="text-xs text-gray-600 italic">
               Thank you for your business!
             </p>
+          </div>
+        </div>
+      </div>
+      
+      {/* Modern downloadable template (hidden from view but used for PDF generation) */}
+      <div ref={downloadRef} className="hidden">
+        <div className="bg-white p-8" style={{ width: '1200px' }}>
+          {/* Modern header with gradient */}
+          <div className="pb-8 mb-8" style={{ borderBottom: '3px solid #f3f4f6' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: '#111827', marginBottom: '8px' }}>INVOICE</h1>
+                <div style={{ background: 'linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%)', height: '6px', width: '60px', marginBottom: '16px' }}></div>
+                <div style={{ fontSize: '14px', color: '#4b5563' }}>
+                  <p style={{ fontWeight: '500', marginBottom: '4px' }}><span style={{ fontWeight: 'bold' }}>Invoice #:</span> {invoice.invoiceNumber}</p>
+                  <p style={{ marginBottom: '4px' }}><span style={{ fontWeight: 'bold' }}>Date:</span> {formatDate(invoice.date)}</p>
+                  <p><span style={{ fontWeight: 'bold' }}>Due Date:</span> {formatDate(invoice.dueDate)}</p>
+                </div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '8px' }}>
+                  {businessInfo.business_name || 'Your Company Name'}
+                </div>
+                <div style={{ fontSize: '14px', color: '#4b5563' }}>
+                  <p style={{ marginBottom: '4px' }}>{businessInfo.business_address || 'Business Address Not Set'}</p>
+                  <p style={{ marginBottom: '4px' }}>{businessInfo.contact_number || 'Contact Number Not Set'}</p>
+                  <p>GST: 27XXXXX1234X1Z5</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Client and payment info */}
+          <div style={{ display: 'flex', marginBottom: '32px', gap: '24px' }}>
+            <div style={{ flex: '1', background: '#f9fafb', padding: '20px', borderRadius: '8px' }}>
+              <h2 style={{ fontSize: '16px', fontWeight: '600', color: '#374151', marginBottom: '12px' }}>Bill To</h2>
+              <div>
+                <p style={{ fontWeight: '500', fontSize: '16px', marginBottom: '8px', color: '#111827' }}>{invoice.billTo.name}</p>
+                <p style={{ fontSize: '14px', color: '#4b5563', whiteSpace: 'pre-line', marginBottom: '8px' }}>{invoice.billTo.address}</p>
+                {invoice.billTo.email && <p style={{ fontSize: '14px', color: '#4b5563', marginBottom: '8px' }}>{invoice.billTo.email}</p>}
+                <p style={{ fontSize: '14px', color: '#4b5563' }}>Customer ID: CUST-{Math.floor(Math.random() * 900) + 100}</p>
+              </div>
+            </div>
+            <div style={{ flex: '1', background: '#f9fafb', padding: '20px', borderRadius: '8px' }}>
+              <h2 style={{ fontSize: '16px', fontWeight: '600', color: '#374151', marginBottom: '12px' }}>Payment Information</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px' }}>
+                <div style={{ fontSize: '14px', fontWeight: '500', color: '#4b5563' }}>Issue Date:</div>
+                <div style={{ fontSize: '14px', color: '#111827' }}>{formatDate(invoice.date)}</div>
+                
+                <div style={{ fontSize: '14px', fontWeight: '500', color: '#4b5563' }}>Due Date:</div>
+                <div style={{ fontSize: '14px', color: '#111827' }}>{formatDate(invoice.dueDate)}</div>
+                
+                <div style={{ fontSize: '14px', fontWeight: '500', color: '#4b5563' }}>Payment Method:</div>
+                <div style={{ fontSize: '14px', color: '#111827' }}>Bank Transfer</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Items Table */}
+          <div style={{ marginBottom: '32px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px', color: '#111827' }}>Invoice Items</h3>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+              <thead>
+                <tr style={{ background: '#f3f4f6' }}>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', borderBottom: '2px solid #e5e7eb', width: '40%' }}>Description</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: '600', borderBottom: '2px solid #e5e7eb' }}>Quantity</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: '600', borderBottom: '2px solid #e5e7eb' }}>Unit Price</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: '600', borderBottom: '2px solid #e5e7eb' }}>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {invoice.items.map((item, i) => (
+                  <tr key={i} style={{ background: i % 2 === 0 ? '#ffffff' : '#f9fafb' }}>
+                    <td style={{ padding: '12px 16px', borderBottom: '1px solid #e5e7eb', fontWeight: '500' }}>{item.description}</td>
+                    <td style={{ padding: '12px 16px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>{item.quantity}</td>
+                    <td style={{ padding: '12px 16px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>{formatCurrency(item.unitPrice)}</td>
+                    <td style={{ padding: '12px 16px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>{formatCurrency(item.amount)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colSpan={3} style={{ padding: '12px 16px', textAlign: 'right', fontWeight: '500', borderTop: '2px solid #e5e7eb' }}>Subtotal</td>
+                  <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: '500', borderTop: '2px solid #e5e7eb' }}>{formatCurrency(invoice.subtotal)}</td>
+                </tr>
+                <tr>
+                  <td colSpan={3} style={{ padding: '12px 16px', textAlign: 'right', fontWeight: '500' }}>Tax ({invoice.taxRate}%)</td>
+                  <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: '500' }}>{formatCurrency(invoice.taxAmount)}</td>
+                </tr>
+                <tr style={{ background: '#f3f4f6' }}>
+                  <td colSpan={3} style={{ padding: '16px', textAlign: 'right', fontWeight: '700', fontSize: '18px' }}>Total</td>
+                  <td style={{ padding: '16px', textAlign: 'right', fontWeight: '700', fontSize: '18px', color: '#4f46e5' }}>{formatCurrency(invoice.total)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          {/* Bank Details & Payment Terms */}
+          <div style={{ display: 'flex', gap: '24px', marginBottom: '32px' }}>
+            <div style={{ flex: '1' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>Payment Details</h3>
+              <div style={{ fontSize: '13px', color: '#4b5563', lineHeight: '1.6' }}>
+                <p style={{ marginBottom: '4px' }}>Bank Name: STATE BANK OF INDIA</p>
+                <p style={{ marginBottom: '4px' }}>Account Name: {businessInfo.business_name || 'Your Company Name'}</p>
+                <p style={{ marginBottom: '4px' }}>Account Number: XXXXXXXXXXXX</p>
+                <p style={{ marginBottom: '4px' }}>IFSC Code: SBIN0011223</p>
+                <p>Branch: Main Branch</p>
+              </div>
+            </div>
+            <div style={{ flex: '1' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>Payment Terms</h3>
+              <ul style={{ fontSize: '13px', color: '#4b5563', paddingLeft: '20px', lineHeight: '1.6' }}>
+                <li style={{ marginBottom: '4px' }}>Please pay before the due date.</li>
+                <li style={{ marginBottom: '4px' }}>Include invoice number in payment reference.</li>
+                <li style={{ marginBottom: '4px' }}>Late payments may incur additional charges.</li>
+                <li>For questions regarding this invoice, please contact our accounts department.</li>
+              </ul>
+            </div>
+          </div>
+          
+          {/* Footer with signatures and thank you note */}
+          <div style={{ marginTop: '48px', paddingTop: '24px', borderTop: '2px solid #f3f4f6', display: 'flex', justifyContent: 'space-between' }}>
+            <div>
+              <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '32px' }}>For {businessInfo.business_name || 'Your Company Name'}:</p>
+              <div style={{ borderBottom: '1px solid #d1d5db', width: '200px' }}></div>
+              <p style={{ fontSize: '12px', marginTop: '8px', color: '#6b7280' }}>Authorized Signature</p>
+            </div>
+            <div style={{ textAlign: 'right', alignSelf: 'flex-end' }}>
+              <p style={{ fontSize: '14px', fontStyle: 'italic', color: '#4f46e5' }}>
+                Thank you for your business!
+              </p>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
+                <div style={{ height: '4px', width: '100px', background: 'linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%)' }}></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
