@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -273,13 +272,6 @@ const Invoice = () => {
           <div>
             {invoiceData ? (
               <div className="glass-panel p-6 animate-fade-in">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold">Invoice Preview</h2>
-                  <Button variant="outline" onClick={handlePrint}>
-                    <Download className="mr-2 h-4 w-4" />
-                    Print / Download
-                  </Button>
-                </div>
                 <InvoicePreview invoice={invoiceData} />
               </div>
             ) : (

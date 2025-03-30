@@ -5,6 +5,9 @@ import { Download, Printer, Share2, FileText, Calendar, Truck, CreditCard } from
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import { useRef } from "react";
 
 interface PurchaseOrderPreviewProps {
   poData: PurchaseOrderData | null;
@@ -12,6 +15,7 @@ interface PurchaseOrderPreviewProps {
 
 const PurchaseOrderPreview = ({ poData }: PurchaseOrderPreviewProps) => {
   const isMobile = useIsMobile();
+  const printRef = useRef<HTMLDivElement>(null);
   
   if (!poData) {
     return (
@@ -31,13 +35,56 @@ const PurchaseOrderPreview = ({ poData }: PurchaseOrderPreviewProps) => {
     window.print();
   };
   
-  const handleDownload = () => {
-    // In a real app, this would generate a PDF
-    toast.success("Purchase order download started");
+  const handleDownload = async () => {
+    if (!printRef.current) {
+      toast.error("Could not generate PDF");
+      return;
+    }
+    
+    try {
+      toast.info("Generating PDF, please wait...");
+      
+      const canvas = await html2canvas(printRef.current, { 
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff"
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      const imgWidth = 210; // A4 width in mm
+      const imgHeight = canvas.height * imgWidth / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      pdf.save(`PO-${poData.supplier_name.replace(/\s+/g, '-')}.pdf`);
+      
+      toast.success("Purchase order downloaded successfully");
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast.error("Failed to generate PDF");
+    }
   };
   
   const handleShare = () => {
-    toast.success("Sharing options opened");
+    if (navigator.share) {
+      navigator.share({
+        title: `Purchase Order - ${poData.supplier_name}`,
+        text: `Purchase Order for ${poData.supplier_name}`,
+      }).then(() => {
+        toast.success("Shared successfully");
+      }).catch((error) => {
+        console.error("Error sharing:", error);
+        toast.error("Failed to share");
+      });
+    } else {
+      toast.success("Sharing options opened");
+    }
   };
   
   const formatDate = (dateString: string) => {
@@ -83,64 +130,66 @@ const PurchaseOrderPreview = ({ poData }: PurchaseOrderPreviewProps) => {
         </div>
       </div>
       
-      <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-6 bg-muted/30 p-4 rounded-lg">
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground mb-1 flex items-center">
-            <CreditCard className="h-4 w-4 mr-1 text-primary/70" /> Supplier
-          </h3>
-          <p className="font-medium">{poData.supplier_name}</p>
+      <div ref={printRef} className="bg-white p-6 rounded-lg">
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-6 bg-muted/30 p-4 rounded-lg">
+          <div>
+            <h3 className="text-sm font-medium text-muted-foreground mb-1 flex items-center">
+              <CreditCard className="h-4 w-4 mr-1 text-primary/70" /> Supplier
+            </h3>
+            <p className="font-medium">{poData.supplier_name}</p>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-muted-foreground mb-1 flex items-center">
+              <Calendar className="h-4 w-4 mr-1 text-primary/70" /> Delivery Date
+            </h3>
+            <p className="font-medium">{formatDate(poData.delivery_date)}</p>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-muted-foreground mb-1 flex items-center">
+              <Truck className="h-4 w-4 mr-1 text-primary/70" /> Shipping Address
+            </h3>
+            <p className="font-medium">{poData.shipping_address}</p>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-muted-foreground mb-1 flex items-center">
+              <CreditCard className="h-4 w-4 mr-1 text-primary/70" /> Payment Terms
+            </h3>
+            <p className="font-medium">{poData.payment_terms}</p>
+          </div>
         </div>
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground mb-1 flex items-center">
-            <Calendar className="h-4 w-4 mr-1 text-primary/70" /> Delivery Date
-          </h3>
-          <p className="font-medium">{formatDate(poData.delivery_date)}</p>
-        </div>
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground mb-1 flex items-center">
-            <Truck className="h-4 w-4 mr-1 text-primary/70" /> Shipping Address
-          </h3>
-          <p className="font-medium">{poData.shipping_address}</p>
-        </div>
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground mb-1 flex items-center">
-            <CreditCard className="h-4 w-4 mr-1 text-primary/70" /> Payment Terms
-          </h3>
-          <p className="font-medium">{poData.payment_terms}</p>
-        </div>
-      </div>
-      
-      <div className="overflow-x-auto border rounded-lg">
-        <Table>
-          <TableHeader className="bg-muted/30">
-            <TableRow>
-              <TableHead className="w-[50%]">Item Description</TableHead>
-              <TableHead className="text-right">Qty</TableHead>
-              <TableHead className="text-right">Unit Price</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {poData.items.map((item, index) => (
-              <TableRow key={index} className={index % 2 === 0 ? 'bg-background' : 'bg-muted/10'}>
-                <TableCell className="font-medium">{item.description}</TableCell>
-                <TableCell className="text-right">{item.quantity}</TableCell>
-                <TableCell className="text-right">{formatCurrency(item.unit_price)}</TableCell>
-                <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
+        
+        <div className="overflow-x-auto border rounded-lg">
+          <Table>
+            <TableHeader className="bg-muted/30">
+              <TableRow>
+                <TableHead className="w-[50%]">Item Description</TableHead>
+                <TableHead className="text-right">Qty</TableHead>
+                <TableHead className="text-right">Unit Price</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
               </TableRow>
-            ))}
-            <TableRow className="bg-muted/30 font-bold">
-              <TableCell colSpan={3} className="text-right">Total:</TableCell>
-              <TableCell className="text-right">{formatCurrency(poData.total_amount)}</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </div>
-      
-      <div className="mt-6 pt-6 border-t">
-        <p className="text-sm text-muted-foreground">
-          This purchase order was generated by AI based on your description.
-        </p>
+            </TableHeader>
+            <TableBody>
+              {poData.items.map((item, index) => (
+                <TableRow key={index} className={index % 2 === 0 ? 'bg-background' : 'bg-muted/10'}>
+                  <TableCell className="font-medium">{item.description}</TableCell>
+                  <TableCell className="text-right">{item.quantity}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(item.unit_price)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
+                </TableRow>
+              ))}
+              <TableRow className="bg-muted/30 font-bold">
+                <TableCell colSpan={3} className="text-right">Total:</TableCell>
+                <TableCell className="text-right">{formatCurrency(poData.total_amount)}</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
+        
+        <div className="mt-6 pt-6 border-t">
+          <p className="text-sm text-muted-foreground">
+            This purchase order was generated by AI based on your description.
+          </p>
+        </div>
       </div>
     </div>
   );

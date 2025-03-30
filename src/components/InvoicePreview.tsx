@@ -1,9 +1,13 @@
 
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
-import { Building2, User, CalendarDays, CalendarClock, Banknote } from "lucide-react";
+import { Building2, User, CalendarDays, CalendarClock, Banknote, Download, Printer } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 interface InvoiceItem {
   description: string;
@@ -66,6 +70,7 @@ const InvoicePreview = ({ invoice }: InvoicePreviewProps) => {
     business_address: null,
     contact_number: null
   });
+  const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchBusinessInfo = async () => {
@@ -95,9 +100,63 @@ const InvoicePreview = ({ invoice }: InvoicePreviewProps) => {
     fetchBusinessInfo();
   }, [user]);
 
+  const handlePrint = () => {
+    window.print();
+  };
+  
+  const handleDownload = async () => {
+    if (!printRef.current) {
+      toast.error("Could not generate PDF");
+      return;
+    }
+    
+    try {
+      toast.info("Generating PDF, please wait...");
+      
+      const canvas = await html2canvas(printRef.current, { 
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff"
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      const imgWidth = 210; // A4 width in mm
+      const imgHeight = canvas.height * imgWidth / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      pdf.save(`Invoice-${invoice.invoiceNumber}.pdf`);
+      
+      toast.success("Invoice downloaded successfully");
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast.error("Failed to generate PDF");
+    }
+  };
+
   return (
     <div className="bg-white rounded-lg overflow-hidden border p-6 print:border-0 print:p-1 print:shadow-none animate-fade-in">
-      <div className="flex flex-col space-y-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-xl font-semibold">Invoice Preview</h1>
+        <div className="flex space-x-2 print:hidden">
+          <Button size="sm" variant="outline" onClick={handlePrint}>
+            <Printer className="h-4 w-4 mr-2" />
+            Print
+          </Button>
+          <Button size="sm" variant="outline" onClick={handleDownload}>
+            <Download className="h-4 w-4 mr-2" />
+            Download PDF
+          </Button>
+        </div>
+      </div>
+      
+      <div ref={printRef} className="flex flex-col space-y-6">
         {/* Header */}
         <div className="flex justify-between items-start">
           <div>
