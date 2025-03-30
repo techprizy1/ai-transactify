@@ -1,7 +1,7 @@
 
 import { useIsMobile } from "@/hooks/use-mobile";
 import { PurchaseOrderData } from "@/lib/po-service";
-import { Download, Printer, Share2, FileText, Calendar, Truck, CreditCard } from "lucide-react";
+import { Download, Printer, Share2, FileText, Calendar, Truck, CreditCard, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
@@ -130,65 +130,126 @@ const PurchaseOrderPreview = ({ poData }: PurchaseOrderPreviewProps) => {
         </div>
       </div>
       
-      <div ref={printRef} className="bg-white p-6 rounded-lg">
-        <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-6 bg-muted/30 p-4 rounded-lg">
+      <div ref={printRef} className="bg-white p-6 rounded-lg border shadow-sm">
+        {/* PO Header */}
+        <div className="flex justify-between items-start mb-8 border-b pb-6">
           <div>
-            <h3 className="text-sm font-medium text-muted-foreground mb-1 flex items-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">PURCHASE ORDER</h1>
+            <div className="text-sm text-gray-600">
+              <p className="font-medium">PO #: {Math.floor(Math.random() * 9000) + 1000}</p>
+              <p>Issue Date: {new Date().toLocaleDateString('en-IN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-sm text-gray-600">
+              <p className="font-medium text-gray-900 flex items-center justify-end">
+                <Building2 className="h-4 w-4 mr-1 text-primary/70" />
+                Your Company Name
+              </p>
+              <p>123 Business Street, Business District</p>
+              <p>City, State, ZIP</p>
+              <p>Phone: +91 XXXX XXXX</p>
+            </div>
+          </div>
+        </div>
+        
+        {/* PO Details Grid */}
+        <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-gray-50 p-4 rounded-md">
+            <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
               <CreditCard className="h-4 w-4 mr-1 text-primary/70" /> Supplier
             </h3>
-            <p className="font-medium">{poData.supplier_name}</p>
+            <div className="text-gray-800">
+              <p className="font-medium">{poData.supplier_name}</p>
+              <p className="text-sm text-gray-600">Supplier ID: SUP-{Math.floor(Math.random() * 900) + 100}</p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-sm font-medium text-muted-foreground mb-1 flex items-center">
-              <Calendar className="h-4 w-4 mr-1 text-primary/70" /> Delivery Date
+          <div className="bg-gray-50 p-4 rounded-md">
+            <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+              <Calendar className="h-4 w-4 mr-1 text-primary/70" /> Delivery Details
             </h3>
-            <p className="font-medium">{formatDate(poData.delivery_date)}</p>
+            <div className="text-gray-800">
+              <p className="font-medium">Expected delivery: {formatDate(poData.delivery_date)}</p>
+              <p className="text-sm text-gray-600">Payment terms: {poData.payment_terms}</p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-sm font-medium text-muted-foreground mb-1 flex items-center">
+          <div className="bg-gray-50 p-4 rounded-md">
+            <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
               <Truck className="h-4 w-4 mr-1 text-primary/70" /> Shipping Address
             </h3>
-            <p className="font-medium">{poData.shipping_address}</p>
+            <div className="text-gray-800">
+              <p className="font-medium">{poData.shipping_address}</p>
+            </div>
+          </div>
+        </div>
+        
+        {/* Items Table */}
+        <div className="mb-8">
+          <h3 className="text-base font-semibold mb-4">Order Items</h3>
+          <div className="overflow-x-auto border rounded-lg">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50">
+                  <TableHead className="w-[40%] font-semibold">Item Description</TableHead>
+                  <TableHead className="text-right font-semibold">Quantity</TableHead>
+                  <TableHead className="text-right font-semibold">Unit Price</TableHead>
+                  <TableHead className="text-right font-semibold">Amount</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {poData.items.map((item, index) => (
+                  <TableRow key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <TableCell className="font-medium">{item.description}</TableCell>
+                    <TableCell className="text-right">{item.quantity}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(item.unit_price)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
+                  </TableRow>
+                ))}
+                <TableRow className="bg-gray-100 font-bold border-t-2">
+                  <TableCell colSpan={3} className="text-right">Total:</TableCell>
+                  <TableCell className="text-right">{formatCurrency(poData.total_amount)}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+        
+        {/* Terms & Notes */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <h3 className="text-sm font-semibold mb-2">Terms & Conditions</h3>
+            <ul className="text-xs text-gray-600 list-disc pl-4 space-y-1">
+              <li>All items must be delivered by the delivery date.</li>
+              <li>Payment will be processed according to the payment terms.</li>
+              <li>Goods received in damaged condition will be returned.</li>
+              <li>Please quote PO number in all correspondence.</li>
+            </ul>
           </div>
           <div>
-            <h3 className="text-sm font-medium text-muted-foreground mb-1 flex items-center">
-              <CreditCard className="h-4 w-4 mr-1 text-primary/70" /> Payment Terms
-            </h3>
-            <p className="font-medium">{poData.payment_terms}</p>
+            <h3 className="text-sm font-semibold mb-2">Notes</h3>
+            <p className="text-xs text-gray-600">
+              This purchase order was generated by AI based on your description.
+              Please contact us if you have any questions about this order.
+            </p>
           </div>
         </div>
         
-        <div className="overflow-x-auto border rounded-lg">
-          <Table>
-            <TableHeader className="bg-muted/30">
-              <TableRow>
-                <TableHead className="w-[50%]">Item Description</TableHead>
-                <TableHead className="text-right">Qty</TableHead>
-                <TableHead className="text-right">Unit Price</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {poData.items.map((item, index) => (
-                <TableRow key={index} className={index % 2 === 0 ? 'bg-background' : 'bg-muted/10'}>
-                  <TableCell className="font-medium">{item.description}</TableCell>
-                  <TableCell className="text-right">{item.quantity}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(item.unit_price)}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
-                </TableRow>
-              ))}
-              <TableRow className="bg-muted/30 font-bold">
-                <TableCell colSpan={3} className="text-right">Total:</TableCell>
-                <TableCell className="text-right">{formatCurrency(poData.total_amount)}</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </div>
-        
-        <div className="mt-6 pt-6 border-t">
-          <p className="text-sm text-muted-foreground">
-            This purchase order was generated by AI based on your description.
-          </p>
+        {/* Signatures */}
+        <div className="mt-10 pt-6 border-t grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <p className="text-xs text-gray-500 mb-8">Authorized By:</p>
+            <div className="border-b border-gray-300 w-48"></div>
+            <p className="text-xs mt-1 text-gray-600">Authorized Signature</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 mb-8">Received By:</p>
+            <div className="border-b border-gray-300 w-48"></div>
+            <p className="text-xs mt-1 text-gray-600">Supplier Signature</p>
+          </div>
         </div>
       </div>
     </div>

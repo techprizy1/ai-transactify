@@ -3,7 +3,7 @@ import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, Table
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
-import { Building2, User, CalendarDays, CalendarClock, Banknote, Download, Printer } from "lucide-react";
+import { Building2, User, CalendarDays, CalendarClock, Banknote, Download, Printer, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import html2canvas from "html2canvas";
@@ -143,7 +143,10 @@ const InvoicePreview = ({ invoice }: InvoicePreviewProps) => {
   return (
     <div className="bg-white rounded-lg overflow-hidden border p-6 print:border-0 print:p-1 print:shadow-none animate-fade-in">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-xl font-semibold">Invoice Preview</h1>
+        <h1 className="text-xl font-semibold flex items-center">
+          <FileText className="h-5 w-5 mr-2 text-primary/70" />
+          Invoice Preview
+        </h1>
         <div className="flex space-x-2 print:hidden">
           <Button size="sm" variant="outline" onClick={handlePrint}>
             <Printer className="h-4 w-4 mr-2" />
@@ -156,13 +159,15 @@ const InvoicePreview = ({ invoice }: InvoicePreviewProps) => {
         </div>
       </div>
       
-      <div ref={printRef} className="flex flex-col space-y-6">
+      <div ref={printRef} className="bg-white p-6 rounded-lg border shadow-sm">
         {/* Header */}
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-start mb-8 border-b pb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">INVOICE</h1>
-            <div className="mt-1 text-sm text-gray-500">
-              <p className="font-medium"># {invoice.invoiceNumber}</p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">INVOICE</h1>
+            <div className="text-sm text-gray-600">
+              <p className="font-medium">Invoice #: {invoice.invoiceNumber}</p>
+              <p>Date: {formatDate(invoice.date)}</p>
+              <p>Due Date: {formatDate(invoice.dueDate)}</p>
             </div>
           </div>
           <div className="text-right">
@@ -170,88 +175,122 @@ const InvoicePreview = ({ invoice }: InvoicePreviewProps) => {
               <Building2 className="h-4 w-4 mr-1 text-primary/70" />
               {businessInfo.business_name || 'Your Company Name'}
             </div>
-            <div className="text-sm text-gray-500 mt-1">
+            <div className="text-sm text-gray-600 mt-1">
               <p>{businessInfo.business_address || 'Business Address Not Set'}</p>
               <p>{businessInfo.contact_number || 'Contact Number Not Set'}</p>
+              <p>GST: 27XXXXX1234X1Z5</p>
             </div>
           </div>
         </div>
 
-        {/* Dates & Client Info */}
-        <div className="grid sm:grid-cols-2 gap-6 pt-4 border-t">
-          <div>
-            <h2 className="text-sm font-semibold text-gray-500 uppercase mb-2 flex items-center">
+        {/* Client Info */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="bg-gray-50 p-4 rounded-md">
+            <h2 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
               <User className="h-4 w-4 mr-1 text-primary/70" />
               Bill To
             </h2>
             <div className="text-gray-800">
               <p className="font-medium">{invoice.billTo.name}</p>
-              <p className="whitespace-pre-line">{invoice.billTo.address}</p>
-              {invoice.billTo.email && <p>{invoice.billTo.email}</p>}
+              <p className="whitespace-pre-line text-sm">{invoice.billTo.address}</p>
+              {invoice.billTo.email && <p className="text-sm">{invoice.billTo.email}</p>}
+              <p className="text-sm">Customer ID: CUST-{Math.floor(Math.random() * 900) + 100}</p>
             </div>
           </div>
-          <div className="sm:text-right">
-            <div className="grid grid-cols-2 sm:grid-cols-2 gap-x-4 gap-y-2">
-              <div className="text-sm font-medium text-gray-500 flex items-center justify-end sm:justify-start">
-                <CalendarDays className="h-4 w-4 mr-1 text-primary/70" />
-                Issue Date:
-              </div>
-              <div className="text-gray-800">{formatDate(invoice.date)}</div>
+          <div className="bg-gray-50 p-4 rounded-md">
+            <h2 className="text-sm font-semibold text-gray-700 mb-2">Payment Information</h2>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+              <div className="text-sm font-medium text-gray-600">Issue Date:</div>
+              <div className="text-sm text-gray-800">{formatDate(invoice.date)}</div>
               
-              <div className="text-sm font-medium text-gray-500 flex items-center justify-end sm:justify-start">
-                <CalendarClock className="h-4 w-4 mr-1 text-primary/70" />
-                Due Date:
-              </div>
-              <div className="text-gray-800">{formatDate(invoice.dueDate)}</div>
+              <div className="text-sm font-medium text-gray-600">Due Date:</div>
+              <div className="text-sm text-gray-800">{formatDate(invoice.dueDate)}</div>
+              
+              <div className="text-sm font-medium text-gray-600">Payment Method:</div>
+              <div className="text-sm text-gray-800">Bank Transfer</div>
             </div>
           </div>
         </div>
 
         {/* Items Table */}
-        <div className="pt-4">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-gray-50">
-                <TableHead>Description</TableHead>
-                <TableHead className="text-right">Quantity</TableHead>
-                <TableHead className="text-right">Unit Price</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {invoice.items.map((item, i) => (
-                <TableRow key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <TableCell className="font-medium">{item.description}</TableCell>
-                  <TableCell className="text-right">{item.quantity}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(item.unitPrice)}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
+        <div className="mb-8">
+          <h3 className="text-base font-semibold mb-4">Invoice Items</h3>
+          <div className="overflow-x-auto border rounded-lg">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50">
+                  <TableHead className="w-[40%] font-semibold">Description</TableHead>
+                  <TableHead className="text-right font-semibold">Quantity</TableHead>
+                  <TableHead className="text-right font-semibold">Unit Price</TableHead>
+                  <TableHead className="text-right font-semibold">Amount</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-            <TableFooter>
-              <TableRow>
-                <TableCell colSpan={3} className="text-right font-medium">Subtotal</TableCell>
-                <TableCell className="text-right">{formatCurrency(invoice.subtotal)}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell colSpan={3} className="text-right font-medium">Tax ({invoice.taxRate}%)</TableCell>
-                <TableCell className="text-right">{formatCurrency(invoice.taxAmount)}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell colSpan={3} className="text-right font-semibold text-lg flex items-center justify-end">
-                  <Banknote className="h-4 w-4 mr-1 text-primary" />
-                  Total
-                </TableCell>
-                <TableCell className="text-right font-bold text-lg">{formatCurrency(invoice.total)}</TableCell>
-              </TableRow>
-            </TableFooter>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {invoice.items.map((item, i) => (
+                  <TableRow key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <TableCell className="font-medium">{item.description}</TableCell>
+                    <TableCell className="text-right">{item.quantity}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(item.unitPrice)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TableCell colSpan={3} className="text-right font-medium">Subtotal</TableCell>
+                  <TableCell className="text-right">{formatCurrency(invoice.subtotal)}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell colSpan={3} className="text-right font-medium">Tax ({invoice.taxRate}%)</TableCell>
+                  <TableCell className="text-right">{formatCurrency(invoice.taxAmount)}</TableCell>
+                </TableRow>
+                <TableRow className="bg-gray-100">
+                  <TableCell colSpan={3} className="text-right font-semibold text-lg flex items-center justify-end">
+                    <Banknote className="h-4 w-4 mr-1 text-primary" />
+                    Total
+                  </TableCell>
+                  <TableCell className="text-right font-bold text-lg">{formatCurrency(invoice.total)}</TableCell>
+                </TableRow>
+              </TableFooter>
+            </Table>
+          </div>
         </div>
 
-        {/* Footer */}
-        <div className="mt-6 pt-4 border-t text-sm text-gray-500">
-          <p className="font-medium mb-1">Payment Terms</p>
-          <p>Please pay the total amount by the due date. Thank you for your business!</p>
+        {/* Bank Details & Payment Terms */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <h3 className="text-sm font-semibold mb-2">Payment Details</h3>
+            <div className="text-xs text-gray-600 space-y-1">
+              <p>Bank Name: STATE BANK OF INDIA</p>
+              <p>Account Name: {businessInfo.business_name || 'Your Company Name'}</p>
+              <p>Account Number: XXXXXXXXXXXX</p>
+              <p>IFSC Code: SBIN0011223</p>
+              <p>Branch: Main Branch</p>
+            </div>
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold mb-2">Payment Terms</h3>
+            <ul className="text-xs text-gray-600 list-disc pl-4 space-y-1">
+              <li>Please pay before the due date.</li>
+              <li>Include invoice number in payment reference.</li>
+              <li>Late payments may incur additional charges.</li>
+              <li>For questions regarding this invoice, please contact our accounts department.</li>
+            </ul>
+          </div>
+        </div>
+        
+        {/* Signatures */}
+        <div className="mt-10 pt-6 border-t grid grid-cols-2 gap-8">
+          <div>
+            <p className="text-xs text-gray-500 mb-8">For {businessInfo.business_name || 'Your Company Name'}:</p>
+            <div className="border-b border-gray-300 w-48"></div>
+            <p className="text-xs mt-1 text-gray-600">Authorized Signature</p>
+          </div>
+          <div className="text-right">
+            <p className="text-xs text-gray-600 italic">
+              Thank you for your business!
+            </p>
+          </div>
         </div>
       </div>
     </div>
