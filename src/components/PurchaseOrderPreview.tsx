@@ -1,4 +1,3 @@
-
 import { useIsMobile } from "@/hooks/use-mobile";
 import { PurchaseOrderData } from "@/lib/po-service";
 import { Download, Printer, Share2, FileText, Calendar, Truck, CreditCard, Building2 } from "lucide-react";
@@ -276,136 +275,395 @@ const PurchaseOrderPreview = ({ poData }: PurchaseOrderPreviewProps) => {
         </div>
       </div>
       
-      {/* Modern downloadable template (hidden from view but used for PDF generation) */}
+      {/* Completely redesigned and improved downloadable template */}
       <div ref={downloadRef} className="hidden">
-        <div className="bg-white p-8" style={{ width: '1200px' }}>
-          {/* Modern header with gradient */}
-          <div style={{ borderBottom: '3px solid #f3f4f6', paddingBottom: '32px', marginBottom: '32px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: '#111827', marginBottom: '8px' }}>PURCHASE ORDER</h1>
-                <div style={{ background: 'linear-gradient(90deg, #10b981 0%, #059669 100%)', height: '6px', width: '80px', marginBottom: '16px' }}></div>
-                <div style={{ fontSize: '14px', color: '#4b5563' }}>
-                  <p style={{ fontWeight: '500', marginBottom: '4px' }}><span style={{ fontWeight: 'bold' }}>PO #:</span> {Math.floor(Math.random() * 9000) + 1000}</p>
-                  <p><span style={{ fontWeight: 'bold' }}>Issue Date:</span> {new Date().toLocaleDateString('en-IN', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}</p>
-                </div>
+        <div className="bg-white p-8" style={{ width: '1200px', fontFamily: 'Helvetica, Arial, sans-serif' }}>
+          {/* Modern header with logo area and company details */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '40px' }}>
+            <div>
+              <div style={{ 
+                width: '80px', 
+                height: '80px', 
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                borderRadius: '8px'
+              }}>
+                <div style={{ color: 'white', fontSize: '32px', fontWeight: 'bold' }}>YC</div>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '8px' }}>
-                  Your Company Name
-                </div>
-                <div style={{ fontSize: '14px', color: '#4b5563', lineHeight: '1.5' }}>
-                  <p>123 Business Street, Business District</p>
-                  <p>City, State, ZIP</p>
-                  <p>Phone: +91 XXXX XXXX</p>
-                </div>
+              <div style={{ marginTop: '16px', fontSize: '15px', color: '#374151' }}>
+                <p style={{ marginBottom: '4px', fontWeight: '500' }}>Your Company Name</p>
+                <p style={{ marginBottom: '4px' }}>123 Business Street, Business District</p>
+                <p>City, State, ZIP</p>
+              </div>
+            </div>
+            
+            <div style={{ textAlign: 'right' }}>
+              <h1 style={{ 
+                fontSize: '36px', 
+                fontWeight: 'bold', 
+                color: '#111827', 
+                marginBottom: '16px',
+                backgroundImage: 'linear-gradient(90deg, #10b981 0%, #059669 100%)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                display: 'inline-block'
+              }}>PURCHASE ORDER</h1>
+              
+              <div style={{ 
+                background: '#f9fafb', 
+                padding: '15px 20px', 
+                borderRadius: '8px', 
+                border: '1px solid #e5e7eb',
+                display: 'inline-block',
+                minWidth: '250px'
+              }}>
+                <table style={{ width: '100%', fontSize: '15px', borderCollapse: 'collapse' }}>
+                  <tr>
+                    <td style={{ fontWeight: '600', paddingBottom: '8px', color: '#374151' }}>PO #:</td>
+                    <td style={{ textAlign: 'right', paddingBottom: '8px', color: '#111827' }}>
+                      {Math.floor(Math.random() * 9000) + 1000}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={{ fontWeight: '600', paddingBottom: '8px', color: '#374151' }}>Issue Date:</td>
+                    <td style={{ textAlign: 'right', paddingBottom: '8px', color: '#111827' }}>
+                      {new Date().toLocaleDateString('en-IN', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={{ fontWeight: '600', color: '#374151' }}>Status:</td>
+                    <td style={{ textAlign: 'right' }}>
+                      <span style={{ 
+                        background: '#dcfce7', 
+                        color: '#166534', 
+                        padding: '3px 10px', 
+                        borderRadius: '50px',
+                        fontSize: '13px',
+                        fontWeight: '500'
+                      }}>ISSUED</span>
+                    </td>
+                  </tr>
+                </table>
               </div>
             </div>
           </div>
 
           {/* Purchase Order Info Boxes */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px', marginBottom: '32px' }}>
-            <div style={{ background: '#f9fafb', padding: '20px', borderRadius: '8px' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#374151', marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
-                Supplier
-              </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px', marginBottom: '40px' }}>
+            <div style={{ 
+              background: '#f9fafb', 
+              padding: '24px', 
+              borderRadius: '12px', 
+              border: '1px solid #e5e7eb',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+            }}>
+              <h3 style={{ 
+                fontSize: '18px', 
+                fontWeight: '600', 
+                color: '#059669', 
+                marginBottom: '16px',
+                borderBottom: '2px solid #d1fae5',
+                paddingBottom: '8px' 
+              }}>Supplier</h3>
               <div>
-                <p style={{ fontWeight: '500', fontSize: '16px', marginBottom: '8px', color: '#111827' }}>{poData.supplier_name}</p>
-                <p style={{ fontSize: '14px', color: '#4b5563' }}>Supplier ID: SUP-{Math.floor(Math.random() * 900) + 100}</p>
+                <p style={{ fontWeight: '600', fontSize: '18px', marginBottom: '10px', color: '#111827' }}>
+                  {poData.supplier_name}
+                </p>
+                <p style={{ 
+                  fontSize: '14px', 
+                  color: '#4b5563', 
+                  marginBottom: '10px',
+                  display: 'flex', 
+                  alignItems: 'center' 
+                }}>
+                  <span style={{ 
+                    display: 'inline-block', 
+                    width: '8px', 
+                    height: '8px', 
+                    background: '#10b981', 
+                    borderRadius: '50%', 
+                    marginRight: '8px' 
+                  }}></span>
+                  Supplier ID: SUP-{Math.floor(Math.random() * 900) + 100}
+                </p>
               </div>
             </div>
-            <div style={{ background: '#f9fafb', padding: '20px', borderRadius: '8px' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#374151', marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
-                Delivery Details
-              </h3>
+            
+            <div style={{ 
+              background: '#f9fafb', 
+              padding: '24px', 
+              borderRadius: '12px', 
+              border: '1px solid #e5e7eb',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+            }}>
+              <h3 style={{ 
+                fontSize: '18px', 
+                fontWeight: '600', 
+                color: '#059669', 
+                marginBottom: '16px',
+                borderBottom: '2px solid #d1fae5',
+                paddingBottom: '8px' 
+              }}>Delivery Details</h3>
               <div>
-                <p style={{ fontWeight: '500', fontSize: '16px', marginBottom: '8px', color: '#111827' }}>Expected delivery: {formatDate(poData.delivery_date)}</p>
-                <p style={{ fontSize: '14px', color: '#4b5563' }}>Payment terms: {poData.payment_terms}</p>
-              </div>
-            </div>
-            <div style={{ background: '#f9fafb', padding: '20px', borderRadius: '8px', gridColumn: '1 / -1' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#374151', marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
-                Shipping Address
-              </h3>
-              <div>
-                <p style={{ fontWeight: '500', fontSize: '16px', color: '#111827' }}>{poData.shipping_address}</p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '10px 20px' }}>
+                  <div style={{ fontWeight: '500', fontSize: '15px', color: '#374151' }}>Expected delivery:</div>
+                  <div style={{ fontSize: '15px', color: '#111827', textAlign: 'right', fontWeight: '500' }}>
+                    {formatDate(poData.delivery_date)}
+                  </div>
+                  
+                  <div style={{ fontWeight: '500', fontSize: '15px', color: '#374151' }}>Payment terms:</div>
+                  <div style={{ fontSize: '15px', color: '#111827', textAlign: 'right' }}>
+                    {poData.payment_terms}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
+          {/* Shipping Address Box */}
+          <div style={{ 
+            background: '#f9fafb', 
+            padding: '24px', 
+            borderRadius: '12px', 
+            border: '1px solid #e5e7eb',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+            marginBottom: '40px' 
+          }}>
+            <h3 style={{ 
+              fontSize: '18px', 
+              fontWeight: '600', 
+              color: '#059669', 
+              marginBottom: '16px',
+              borderBottom: '2px solid #d1fae5',
+              paddingBottom: '8px' 
+            }}>Shipping Address</h3>
+            <p style={{ fontWeight: '500', fontSize: '16px', color: '#111827' }}>{poData.shipping_address}</p>
+          </div>
+
           {/* Items Table */}
-          <div style={{ marginBottom: '32px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px', color: '#111827' }}>Order Items</h3>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+          <div style={{ marginBottom: '40px' }}>
+            <h3 style={{ 
+              fontSize: '20px', 
+              fontWeight: '600', 
+              marginBottom: '20px', 
+              color: '#111827',
+              paddingBottom: '10px',
+              borderBottom: '2px solid #10b981'
+            }}>Order Items</h3>
+            
+            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0', fontSize: '15px' }}>
               <thead>
-                <tr style={{ background: '#f3f4f6' }}>
-                  <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', borderBottom: '2px solid #e5e7eb', width: '40%' }}>Item Description</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: '600', borderBottom: '2px solid #e5e7eb' }}>Quantity</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: '600', borderBottom: '2px solid #e5e7eb' }}>Unit Price</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: '600', borderBottom: '2px solid #e5e7eb' }}>Amount</th>
+                <tr>
+                  <th style={{ 
+                    padding: '15px', 
+                    textAlign: 'left', 
+                    fontWeight: '600', 
+                    backgroundColor: '#ecfdf5', 
+                    color: '#065f46',
+                    borderTopLeftRadius: '8px',
+                    borderBottom: '2px solid #d1fae5',
+                    width: '40%'
+                  }}>Item Description</th>
+                  <th style={{ 
+                    padding: '15px', 
+                    textAlign: 'center', 
+                    fontWeight: '600', 
+                    backgroundColor: '#ecfdf5', 
+                    color: '#065f46',
+                    borderBottom: '2px solid #d1fae5'
+                  }}>Quantity</th>
+                  <th style={{ 
+                    padding: '15px', 
+                    textAlign: 'right', 
+                    fontWeight: '600', 
+                    backgroundColor: '#ecfdf5', 
+                    color: '#065f46',
+                    borderBottom: '2px solid #d1fae5'
+                  }}>Unit Price</th>
+                  <th style={{ 
+                    padding: '15px', 
+                    textAlign: 'right', 
+                    fontWeight: '600', 
+                    backgroundColor: '#ecfdf5', 
+                    color: '#065f46',
+                    borderTopRightRadius: '8px',
+                    borderBottom: '2px solid #d1fae5'
+                  }}>Amount</th>
                 </tr>
               </thead>
               <tbody>
                 {poData.items.map((item, index) => (
-                  <tr key={index} style={{ background: index % 2 === 0 ? '#ffffff' : '#f9fafb' }}>
-                    <td style={{ padding: '12px 16px', borderBottom: '1px solid #e5e7eb', fontWeight: '500' }}>{item.description}</td>
-                    <td style={{ padding: '12px 16px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>{item.quantity}</td>
-                    <td style={{ padding: '12px 16px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>{formatCurrency(item.unit_price)}</td>
-                    <td style={{ padding: '12px 16px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>{formatCurrency(item.amount)}</td>
+                  <tr key={index} style={{ 
+                    backgroundColor: index % 2 === 0 ? '#ffffff' : '#f9fafb',
+                  }}>
+                    <td style={{ 
+                      padding: '15px', 
+                      borderBottom: '1px solid #e5e7eb', 
+                      fontWeight: '500',
+                      color: '#111827'
+                    }}>{item.description}</td>
+                    <td style={{ 
+                      padding: '15px', 
+                      borderBottom: '1px solid #e5e7eb', 
+                      textAlign: 'center',
+                      color: '#374151'
+                    }}>{item.quantity}</td>
+                    <td style={{ 
+                      padding: '15px', 
+                      borderBottom: '1px solid #e5e7eb', 
+                      textAlign: 'right',
+                      color: '#374151'
+                    }}>{formatCurrency(item.unit_price)}</td>
+                    <td style={{ 
+                      padding: '15px', 
+                      borderBottom: '1px solid #e5e7eb', 
+                      textAlign: 'right',
+                      fontWeight: '500',
+                      color: '#111827'
+                    }}>{formatCurrency(item.amount)}</td>
                   </tr>
                 ))}
-                <tr style={{ background: '#f3f4f6', fontWeight: '700' }}>
-                  <td colSpan={3} style={{ padding: '16px', textAlign: 'right', borderTop: '2px solid #e5e7eb' }}>Total:</td>
-                  <td style={{ padding: '16px', textAlign: 'right', borderTop: '2px solid #e5e7eb', color: '#047857' }}>{formatCurrency(poData.total_amount)}</td>
-                </tr>
               </tbody>
+              <tfoot>
+                <tr>
+                  <td colSpan={3} style={{ 
+                    padding: '18px 15px', 
+                    textAlign: 'right', 
+                    fontWeight: '600', 
+                    fontSize: '16px',
+                    color: '#111827',
+                    borderTop: '2px solid #e5e7eb'
+                  }}>Total Amount:</td>
+                  <td style={{ 
+                    padding: '18px 15px', 
+                    textAlign: 'right', 
+                    backgroundColor: '#ecfdf5',
+                    color: '#065f46',
+                    fontWeight: '700',
+                    fontSize: '18px',
+                    borderRadius: '0 0 8px 0',
+                    borderTop: '2px solid #e5e7eb'
+                  }}>{formatCurrency(poData.total_amount)}</td>
+                </tr>
+              </tfoot>
             </table>
           </div>
 
           {/* Terms & Notes */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px', marginBottom: '32px' }}>
-            <div>
-              <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>Terms & Conditions</h3>
-              <ul style={{ fontSize: '13px', color: '#4b5563', paddingLeft: '20px', lineHeight: '1.6' }}>
-                <li style={{ marginBottom: '4px' }}>All items must be delivered by the delivery date.</li>
-                <li style={{ marginBottom: '4px' }}>Payment will be processed according to the payment terms.</li>
-                <li style={{ marginBottom: '4px' }}>Goods received in damaged condition will be returned.</li>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px', marginBottom: '40px' }}>
+            <div style={{ 
+              background: '#f9fafb', 
+              padding: '24px', 
+              borderRadius: '12px', 
+              border: '1px solid #e5e7eb'
+            }}>
+              <h3 style={{ 
+                fontSize: '18px', 
+                fontWeight: '600', 
+                marginBottom: '16px', 
+                color: '#374151',
+                borderBottom: '2px solid #e5e7eb',
+                paddingBottom: '8px'
+              }}>Terms & Conditions</h3>
+              <ul style={{ 
+                fontSize: '14px', 
+                color: '#4b5563', 
+                paddingLeft: '20px', 
+                lineHeight: '1.6',
+                marginBottom: '0'
+              }}>
+                <li style={{ marginBottom: '8px' }}>All items must be delivered by the delivery date.</li>
+                <li style={{ marginBottom: '8px' }}>Payment will be processed according to the payment terms.</li>
+                <li style={{ marginBottom: '8px' }}>Goods received in damaged condition will be returned.</li>
                 <li>Please quote PO number in all correspondence.</li>
               </ul>
             </div>
-            <div>
-              <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>Notes</h3>
-              <p style={{ fontSize: '13px', color: '#4b5563', lineHeight: '1.6' }}>
+            <div style={{ 
+              background: '#f9fafb', 
+              padding: '24px', 
+              borderRadius: '12px', 
+              border: '1px solid #e5e7eb'
+            }}>
+              <h3 style={{ 
+                fontSize: '18px', 
+                fontWeight: '600', 
+                marginBottom: '16px', 
+                color: '#374151',
+                borderBottom: '2px solid #e5e7eb',
+                paddingBottom: '8px'
+              }}>Notes</h3>
+              <p style={{ 
+                fontSize: '14px', 
+                color: '#4b5563', 
+                lineHeight: '1.6',
+                marginBottom: '0'
+              }}>
                 This purchase order was generated by AI based on your description.
                 Please contact us if you have any questions about this order.
+                We look forward to your prompt delivery and continuing our business relationship.
               </p>
             </div>
           </div>
           
           {/* Signatures */}
-          <div style={{ marginTop: '48px', paddingTop: '24px', borderTop: '2px solid #f3f4f6', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
+          <div style={{ 
+            marginTop: '60px', 
+            paddingTop: '30px', 
+            borderTop: '2px solid #e5e7eb', 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(2, 1fr)', 
+            gap: '30px'
+          }}>
             <div>
-              <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '32px' }}>Authorized By:</p>
-              <div style={{ borderBottom: '1px solid #d1d5db', width: '200px' }}></div>
-              <p style={{ fontSize: '12px', marginTop: '8px', color: '#6b7280' }}>Authorized Signature</p>
+              <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '40px' }}>Authorized By:</p>
+              <div style={{ borderBottom: '1px solid #9ca3af', width: '220px' }}></div>
+              <p style={{ fontSize: '13px', marginTop: '8px', color: '#6b7280' }}>Authorized Signature</p>
             </div>
             <div>
-              <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '32px' }}>Received By:</p>
-              <div style={{ borderBottom: '1px solid #d1d5db', width: '200px' }}></div>
-              <p style={{ fontSize: '12px', marginTop: '8px', color: '#6b7280' }}>Supplier Signature</p>
+              <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '40px' }}>Received By:</p>
+              <div style={{ borderBottom: '1px solid #9ca3af', width: '220px' }}></div>
+              <p style={{ fontSize: '13px', marginTop: '8px', color: '#6b7280' }}>Supplier Signature</p>
             </div>
-            <div style={{ gridColumn: '1 / -1', marginTop: '24px', textAlign: 'center' }}>
-              <div style={{ display: 'inline-block' }}>
-                <div style={{ height: '4px', width: '120px', background: 'linear-gradient(90deg, #10b981 0%, #059669 100%)' }}></div>
-                <p style={{ fontSize: '13px', marginTop: '8px', color: '#047857', fontWeight: '500' }}>
-                  Thank you for your business!
-                </p>
-              </div>
-            </div>
+          </div>
+          
+          {/* Footer */}
+          <div style={{ 
+            marginTop: '60px', 
+            textAlign: 'center', 
+            borderTop: '1px solid #e5e7eb',
+            paddingTop: '20px'
+          }}>
+            <p style={{ 
+              color: '#059669', 
+              fontWeight: '500', 
+              fontSize: '14px',
+              marginBottom: '10px'
+            }}>Thank you for your business!</p>
+            <div style={{ 
+              height: '4px', 
+              width: '120px', 
+              background: 'linear-gradient(90deg, #10b981 0%, #059669 100%)',
+              margin: '0 auto',
+              borderRadius: '2px'
+            }}></div>
+            <p style={{ 
+              fontSize: '12px', 
+              color: '#6b7280',
+              marginTop: '16px'
+            }}>
+              Generated on {new Date().toLocaleDateString('en-IN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </p>
           </div>
         </div>
       </div>
