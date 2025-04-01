@@ -22,9 +22,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  // If not authenticated, redirect to login
+  // If not authenticated, redirect to login with the current location stored
   if (!user) {
-    return <Navigate to="/auth" state={{ from: location }} replace />;
+    return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
   }
 
   // If authenticated, render the protected content
