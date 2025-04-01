@@ -267,23 +267,6 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        {/* Pro Features Teaser */}
-        {mounted && (
-          <div
-            className="mt-8 mx-3 p-4 rounded-xl bg-gradient-to-br from-primary/10 to-purple-500/10 border border-primary/20 animate-fadeIn"
-            style={{ animationDelay: "800ms" }}
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <Sparkles className="w-5 h-5 text-primary" />
-              <span className="font-medium">Premium Features</span>
-            </div>
-            <p className="text-sm text-muted-foreground mb-3">Get advanced reports, insights and AI recommendations.</p>
-            <Button size="sm" variant="outline" className="w-full bg-background/80 hover:bg-background">
-              Upgrade Now
-            </Button>
-          </div>
-        )}
       </SidebarContent>
       
       {/* Footer with user profile or auth options */}
