@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -42,8 +41,6 @@ const Navbar = () => {
     }`}>
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <Link to="/" className="flex items-center space-x-2">
-          <CircleDollarSign className="w-8 h-8 text-primary" />
-          <span className="text-xl font-medium">AccountAI</span>
         </Link>
         
         <nav className="hidden md:flex items-center space-x-1">
