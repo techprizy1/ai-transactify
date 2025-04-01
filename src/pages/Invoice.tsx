@@ -3,12 +3,22 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Loader2, FileText, Send, Download } from 'lucide-react';
+import { Loader2, FileText, Send, Download, Printer } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import InvoicePreview from '@/components/InvoicePreview';
+import InvoiceTemplates, { InvoiceTemplateType } from '@/components/InvoiceTemplates';
+import { downloadInvoice, printInvoice } from '@/utils/pdf-utils';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/AppSidebar';
 import { useAuth } from '@/context/AuthContext';
+import { 
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter 
+} from '@/components/ui/card';
 
 interface InvoiceItem {
   description: string;
@@ -44,6 +54,7 @@ const Invoice = () => {
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [invoiceData, setInvoiceData] = useState<InvoiceData | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<InvoiceTemplateType>('classic');
   const { user } = useAuth();
   const [businessInfo, setBusinessInfo] = useState<BusinessInfo>({
     business_name: null,
@@ -120,7 +131,13 @@ const Invoice = () => {
   };
 
   const handlePrint = () => {
-    window.print();
+    printInvoice();
+  };
+  
+  const handleDownload = () => {
+    if (invoiceData) {
+      downloadInvoice(invoiceData.invoiceNumber);
+    }
   };
   
   const isBusinessInfoMissing = !businessInfo.business_name || !businessInfo.business_address || !businessInfo.contact_number;
@@ -157,95 +174,143 @@ const Invoice = () => {
             
             <div className="grid lg:grid-cols-2 gap-8 print:hidden">
               <div className="space-y-8">
-                <div className="glass-panel p-6 animate-fade-in">
-                  <h2 className="text-xl font-semibold mb-4">Generate Invoice</h2>
-                  <form onSubmit={handleGenerateInvoice} className="space-y-4">
-                    <div className="space-y-2">
-                      <label htmlFor="invoice-input" className="text-sm font-medium">
-                        Describe your invoice in natural language
-                      </label>
-                      <Textarea
-                        id="invoice-input"
-                        placeholder="Example: Create an invoice for ABC Corp for web design services. Include 3 items: website design for ₹45000, logo design for ₹15000, and SEO setup for ₹25000. The invoice was issued on April 10th and is due in 30 days."
-                        value={prompt}
-                        onChange={(e) => setPrompt(e.target.value)}
-                        rows={6}
-                        className="resize-none transition-all focus-visible:ring-primary/20 focus-visible:ring-offset-0"
-                      />
-                    </div>
-                    
-                    <div className="pt-2">
-                      <Button 
-                        type="submit" 
-                        className="w-full relative overflow-hidden btn-hover-effect" 
-                        disabled={isLoading || !prompt.trim()}
-                      >
-                        {isLoading ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Generating invoice...
-                          </>
-                        ) : (
-                          <>
-                            Generate Invoice
-                            <Send className="ml-2 h-4 w-4" />
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </form>
-                </div>
-                
-                <div className="glass-panel p-6 animate-fade-in">
-                  <h2 className="text-xl font-semibold mb-4">Example prompts</h2>
-                  <div className="space-y-3">
-                    {[
-                      "Create an invoice for ABC Corp for web design services. Include 3 items: website design for ₹45000, logo design for ₹15000, and SEO setup for ₹25000. The invoice was issued today and is due in 30 days.",
-                      "Generate an invoice for John Doe for consulting services at ₹5000 per hour for 10 hours with a tax rate of 18%.",
-                      "Invoice to Acme Inc. for office supplies: 5 laptops at ₹50000 each, 10 monitors at ₹15000 each, and 5 keyboards at ₹1500 each. Apply a 12% tax rate.",
-                      "Make an invoice for XYZ Ltd for software development work done in April. 80 hours of coding at ₹2000/hr and 20 hours of testing at ₹1500/hr. Invoice number INV-2023-42."
-                    ].map((example, index) => (
-                      <div 
-                        key={index} 
-                        className="p-3 bg-muted/50 rounded-md text-sm cursor-pointer hover:bg-muted transition-colors"
-                        onClick={() => {
-                          setPrompt(example);
-                          toast.success('Example copied to input');
-                        }}
-                      >
-                        {example}
+                <Card className="animate-fade-in">
+                  <CardHeader>
+                    <CardTitle>Generate Invoice</CardTitle>
+                    <CardDescription>
+                      Describe your invoice in natural language
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <form onSubmit={handleGenerateInvoice} className="space-y-4">
+                      <div className="space-y-2">
+                        <Textarea
+                          id="invoice-input"
+                          placeholder="Example: Create an invoice for ABC Corp for web design services. Include 3 items: website design for ₹45000, logo design for ₹15000, and SEO setup for ₹25000. The invoice was issued on April 10th and is due in 30 days."
+                          value={prompt}
+                          onChange={(e) => setPrompt(e.target.value)}
+                          rows={6}
+                          className="resize-none transition-all focus-visible:ring-primary/20 focus-visible:ring-offset-0"
+                        />
                       </div>
-                    ))}
-                  </div>
-                </div>
+                      
+                      <div className="pt-2">
+                        <Button 
+                          type="submit" 
+                          className="w-full relative overflow-hidden btn-hover-effect" 
+                          disabled={isLoading || !prompt.trim()}
+                        >
+                          {isLoading ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Generating invoice...
+                            </>
+                          ) : (
+                            <>
+                              Generate Invoice
+                              <Send className="ml-2 h-4 w-4" />
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </form>
+                  </CardContent>
+                </Card>
+                
+                <Card className="animate-fade-in">
+                  <CardHeader>
+                    <CardTitle>Example prompts</CardTitle>
+                    <CardDescription>
+                      Click on any example to use it
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {[
+                        "Create an invoice for ABC Corp for web design services. Include 3 items: website design for ₹45000, logo design for ₹15000, and SEO setup for ₹25000. The invoice was issued today and is due in 30 days.",
+                        "Generate an invoice for John Doe for consulting services at ₹5000 per hour for 10 hours with a tax rate of 18%.",
+                        "Invoice to Acme Inc. for office supplies: 5 laptops at ₹50000 each, 10 monitors at ₹15000 each, and 5 keyboards at ₹1500 each. Apply a 12% tax rate.",
+                        "Make an invoice for XYZ Ltd for software development work done in April. 80 hours of coding at ₹2000/hr and 20 hours of testing at ₹1500/hr. Invoice number INV-2023-42."
+                      ].map((example, index) => (
+                        <div 
+                          key={index} 
+                          className="p-3 bg-muted/50 rounded-md text-sm cursor-pointer hover:bg-muted transition-colors"
+                          onClick={() => {
+                            setPrompt(example);
+                            toast.success('Example copied to input');
+                          }}
+                        >
+                          {example}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {invoiceData && (
+                  <Card className="animate-fade-in">
+                    <CardHeader>
+                      <CardTitle>Invoice Settings</CardTitle>
+                      <CardDescription>
+                        Customize your invoice appearance
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <InvoiceTemplates 
+                        selectedTemplate={selectedTemplate}
+                        onSelectTemplate={setSelectedTemplate}
+                      />
+                    </CardContent>
+                  </Card>
+                )}
               </div>
               
               <div>
                 {invoiceData ? (
-                  <div className="glass-panel p-6 animate-fade-in">
-                    <div className="flex justify-between items-center mb-6">
-                      <h2 className="text-xl font-semibold">Invoice Preview</h2>
-                      <Button variant="outline" onClick={handlePrint}>
-                        <Download className="mr-2 h-4 w-4" />
-                        Print / Download
-                      </Button>
-                    </div>
-                    <InvoicePreview invoice={invoiceData} />
-                  </div>
+                  <Card className="animate-fade-in">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                      <div>
+                        <CardTitle>Invoice Preview</CardTitle>
+                        <CardDescription>
+                          Invoice #{invoiceData.invoiceNumber}
+                        </CardDescription>
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button variant="outline" size="sm" onClick={handlePrint}>
+                          <Printer className="mr-2 h-4 w-4" />
+                          Print
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={handleDownload}>
+                          <Download className="mr-2 h-4 w-4" />
+                          Download
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <div className="border-t">
+                        <InvoicePreview 
+                          invoice={invoiceData} 
+                          template={selectedTemplate} 
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
                 ) : (
-                  <div className="glass-panel p-6 h-full flex flex-col items-center justify-center text-center animate-fade-in">
-                    <FileText className="h-16 w-16 text-muted-foreground/50 mb-4" />
-                    <h3 className="text-lg font-medium mb-2">No Invoice Generated Yet</h3>
-                    <p className="text-muted-foreground max-w-md">
-                      Enter a description of your invoice in the form and click "Generate Invoice" to create a new invoice using AI.
-                    </p>
-                  </div>
+                  <Card className="h-full animate-fade-in">
+                    <CardContent className="h-full flex flex-col items-center justify-center text-center p-6">
+                      <FileText className="h-16 w-16 text-muted-foreground/50 mb-4" />
+                      <h3 className="text-lg font-medium mb-2">No Invoice Generated Yet</h3>
+                      <p className="text-muted-foreground max-w-md">
+                        Enter a description of your invoice in the form and click "Generate Invoice" to create a new invoice using AI.
+                      </p>
+                    </CardContent>
+                  </Card>
                 )}
               </div>
             </div>
             
             <div className="hidden print:block">
-              {invoiceData && <InvoicePreview invoice={invoiceData} />}
+              {invoiceData && <InvoicePreview invoice={invoiceData} template={selectedTemplate} />}
             </div>
           </main>
         </div>
