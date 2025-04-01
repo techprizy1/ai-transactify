@@ -1,7 +1,4 @@
 
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
-
 /**
  * Utility function to handle printing the current page
  */
@@ -11,59 +8,24 @@ export const printInvoice = (): void => {
 
 /**
  * Utility function to create a PDF from the invoice and trigger download
- * This uses jsPDF to create a proper PDF document
+ * This uses the browser's print to PDF functionality
  */
-export const downloadInvoice = async (invoiceNumber: string): Promise<void> => {
-  // Get the invoice element
-  const invoiceElement = document.getElementById('invoice-preview');
+export const downloadInvoice = (invoiceNumber: string): void => {
+  // Set a filename in the print dialog
+  const style = document.createElement('style');
+  style.innerHTML = `@page { size: auto; margin: 10mm; }`;
+  document.head.appendChild(style);
   
-  if (!invoiceElement) {
-    console.error('Invoice element not found');
-    return;
-  }
+  // Change title temporarily to set filename
+  const originalTitle = document.title;
+  document.title = `Invoice-${invoiceNumber}.pdf`;
   
-  try {
-    // Show a loading indicator (can be improved with a UI toast)
-    const originalOpacity = invoiceElement.style.opacity;
-    invoiceElement.style.opacity = '1';
-    
-    // Generate canvas from the invoice element
-    const canvas = await html2canvas(invoiceElement, {
-      scale: 2, // Higher scale for better quality
-      useCORS: true,
-      logging: false,
-      backgroundColor: '#ffffff'
-    });
-    
-    // Calculate PDF dimensions to match the aspect ratio of the invoice
-    const imgData = canvas.toDataURL('image/png');
-    const imgWidth = 210; // A4 width in mm
-    const pageHeight = 297; // A4 height in mm
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    
-    // Create PDF document
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    let position = 0;
-    
-    // Add image to PDF (possibly spanning multiple pages if large)
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-    
-    // If the invoice is longer than one page, add more pages
-    let heightLeft = imgHeight - pageHeight;
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-    }
-    
-    // Save the PDF
-    pdf.save(`Invoice-${invoiceNumber}.pdf`);
-    
-    // Restore original opacity
-    invoiceElement.style.opacity = originalOpacity;
-    
-  } catch (error) {
-    console.error('Error generating PDF:', error);
-  }
+  // Print (user can save as PDF from print dialog)
+  window.print();
+  
+  // Restore original title and remove style
+  setTimeout(() => {
+    document.title = originalTitle;
+    document.head.removeChild(style);
+  }, 100);
 };
