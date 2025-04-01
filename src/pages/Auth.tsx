@@ -61,11 +61,15 @@ const Auth = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
+      // Note: No success toast here as the page will redirect to Google's auth page
     } catch (error: any) {
       setError(error.message || 'An error occurred during Google authentication');
       toast.error('Google authentication failed');
       setLoading(false);
+      console.error('Google auth error:', error);
     }
   };
 
