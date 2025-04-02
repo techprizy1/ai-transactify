@@ -1,9 +1,10 @@
+
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import type { InvoiceTemplateType } from "./InvoiceTemplates";
-import { CalendarDays, User, Phone, FileText } from "lucide-react";
+import { CalendarDays, User, Phone, FileText, Mail, MapPin, Building, CreditCard, ReceiptText } from "lucide-react";
 
 interface InvoiceItem {
   description: string;
@@ -97,6 +98,263 @@ const InvoicePreview = ({ invoice, template = 'classic' }: InvoicePreviewProps) 
   }, [user]);
 
   switch (template) {
+    case 'corporate':
+      return (
+        <div id="invoice-preview" className="bg-white rounded-lg overflow-hidden border print:border-0 print:shadow-none print:p-1">
+          <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-8 print:p-6 text-white">
+            <div className="flex flex-col md:flex-row justify-between items-start">
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight">INVOICE</h1>
+                <div className="mt-2 bg-white/20 px-3 py-1 rounded-md inline-block">
+                  #{invoice.invoiceNumber}
+                </div>
+              </div>
+              <div className="mt-4 md:mt-0 text-white/90">
+                <div className="text-xl font-bold">{businessInfo.business_name || 'Your Company Name'}</div>
+                <div className="mt-1 text-sm">
+                  {businessInfo.business_address && (
+                    <div className="flex items-center">
+                      <MapPin className="h-3.5 w-3.5 mr-1 opacity-70" />
+                      <span>{businessInfo.business_address}</span>
+                    </div>
+                  )}
+                  {businessInfo.contact_number && (
+                    <div className="flex items-center mt-1">
+                      <Phone className="h-3.5 w-3.5 mr-1 opacity-70" />
+                      <span>{businessInfo.contact_number}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="p-8 print:p-6">
+            <div className="grid md:grid-cols-2 gap-8 mb-8">
+              <div className="bg-blue-50 p-5 rounded-lg border border-blue-100">
+                <div className="flex items-center gap-2 mb-3 text-blue-800">
+                  <User className="h-4 w-4" />
+                  <h2 className="font-semibold">BILL TO</h2>
+                </div>
+                <div>
+                  <p className="font-bold text-lg">{invoice.billTo.name}</p>
+                  <p className="whitespace-pre-line mt-2 text-gray-600">{invoice.billTo.address}</p>
+                  {invoice.billTo.email && (
+                    <div className="flex items-center mt-2 text-gray-600">
+                      <Mail className="h-3.5 w-3.5 mr-1" />
+                      <span>{invoice.billTo.email}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="bg-blue-50 p-5 rounded-lg border border-blue-100">
+                <div className="flex items-center gap-2 mb-3 text-blue-800">
+                  <CalendarDays className="h-4 w-4" />
+                  <h2 className="font-semibold">INVOICE DETAILS</h2>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="text-gray-500">Issue Date:</div>
+                  <div className="col-span-2 font-medium">{formatDate(invoice.date)}</div>
+                  
+                  <div className="text-gray-500">Due Date:</div>
+                  <div className="col-span-2 font-medium">{formatDate(invoice.dueDate)}</div>
+                  
+                  <div className="text-gray-500">Status:</div>
+                  <div className="col-span-2">
+                    <span className="bg-yellow-100 text-yellow-800 font-medium text-xs px-2.5 py-0.5 rounded">PENDING</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mb-8 overflow-hidden rounded-lg border border-blue-100">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-blue-50 text-blue-800">
+                    <TableHead className="w-[50%]">Description</TableHead>
+                    <TableHead className="text-right">Quantity</TableHead>
+                    <TableHead className="text-right">Unit Price</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {invoice.items.map((item, i) => (
+                    <TableRow key={i} className="bg-white">
+                      <TableCell className="font-medium">{item.description}</TableCell>
+                      <TableCell className="text-right">{item.quantity}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(item.unitPrice)}</TableCell>
+                      <TableCell className="text-right font-medium">{formatCurrency(item.amount)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            
+            <div className="flex justify-end">
+              <div className="w-full md:w-72 space-y-2 bg-blue-50 p-5 rounded-lg border border-blue-100">
+                <div className="flex justify-between pb-2 border-b border-blue-100">
+                  <span className="text-gray-600">Subtotal:</span>
+                  <span className="font-medium">{formatCurrency(invoice.subtotal)}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-blue-100">
+                  <span className="text-gray-600">Tax ({invoice.taxRate}%):</span>
+                  <span className="font-medium">{formatCurrency(invoice.taxAmount)}</span>
+                </div>
+                <div className="flex justify-between pt-2 font-bold text-lg">
+                  <span>Total:</span>
+                  <span className="text-blue-700">{formatCurrency(invoice.total)}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-12 pt-6 border-t border-gray-100 text-sm text-gray-500">
+              <div className="flex items-center gap-2 mb-2 text-blue-700">
+                <CreditCard className="h-4 w-4" />
+                <p className="font-semibold">Payment Instructions</p>
+              </div>
+              <p>Please pay the total amount by the due date. Bank details are listed below.</p>
+              <div className="mt-3 grid grid-cols-2 gap-3 max-w-md">
+                <div className="text-gray-600">Account Name:</div>
+                <div>{businessInfo.business_name || 'Your Company'}</div>
+                <div className="text-gray-600">Account Number:</div>
+                <div>XXXX-XXXX-XXXX</div>
+                <div className="text-gray-600">Bank Name:</div>
+                <div>EXAMPLE BANK</div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-blue-50 p-4 text-xs text-center text-gray-500 border-t border-blue-100">
+            <p>Thank you for your business!</p>
+          </div>
+        </div>
+      );
+    
+    case 'creative':
+      return (
+        <div id="invoice-preview" className="bg-white rounded-lg overflow-hidden border print:border-0 print:shadow-none print:p-1">
+          <div className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 p-8 print:p-6 text-white">
+            <div className="flex flex-col md:flex-row justify-between items-start">
+              <div>
+                <div className="text-sm text-white/70 uppercase tracking-widest mb-1">Invoice</div>
+                <h1 className="text-4xl font-bold tracking-tight">#{invoice.invoiceNumber}</h1>
+              </div>
+              <div className="mt-6 md:mt-0 text-right">
+                <div className="font-bold text-2xl">{businessInfo.business_name || 'Your Company Name'}</div>
+                <div className="text-white/80 text-sm mt-1">
+                  <p>{businessInfo.business_address || 'Business Address Not Set'}</p>
+                  <p>{businessInfo.contact_number || 'Contact Number Not Set'}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="p-8 print:p-6 bg-gradient-to-b from-white to-purple-50">
+            <div className="grid md:grid-cols-2 gap-6 mb-8">
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-purple-100">
+                <div className="flex items-center mb-3">
+                  <div className="bg-purple-200 p-2 rounded-lg mr-3">
+                    <User className="h-4 w-4 text-purple-700" />
+                  </div>
+                  <h2 className="text-lg font-bold text-gray-700">Client Details</h2>
+                </div>
+                <div>
+                  <p className="text-xl font-bold text-gray-800">{invoice.billTo.name}</p>
+                  <p className="whitespace-pre-line mt-2 text-gray-600">{invoice.billTo.address}</p>
+                  {invoice.billTo.email && <p className="mt-1 text-gray-600">{invoice.billTo.email}</p>}
+                </div>
+              </div>
+              
+              <div className="bg-white p-6 rounded-xl shadow-sm border border-purple-100">
+                <div className="flex items-center mb-3">
+                  <div className="bg-purple-200 p-2 rounded-lg mr-3">
+                    <CalendarDays className="h-4 w-4 text-purple-700" />
+                  </div>
+                  <h2 className="text-lg font-bold text-gray-700">Invoice Info</h2>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="text-gray-500">Issue Date:</span>
+                    <span className="font-medium">{formatDate(invoice.date)}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <span className="text-gray-500">Due Date:</span>
+                    <span className="font-medium">{formatDate(invoice.dueDate)}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-gray-500">Payment Method:</span>
+                    <span className="font-medium">Bank Transfer</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mb-8 overflow-hidden rounded-xl shadow-sm border border-purple-100">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gradient-to-r from-purple-100 to-purple-50 text-gray-800">
+                    <TableHead className="w-[50%] font-bold">Service / Product</TableHead>
+                    <TableHead className="text-right font-bold">Qty</TableHead>
+                    <TableHead className="text-right font-bold">Price</TableHead>
+                    <TableHead className="text-right font-bold">Amount</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {invoice.items.map((item, i) => (
+                    <TableRow key={i} className="bg-white hover:bg-purple-50/30">
+                      <TableCell className="font-medium">{item.description}</TableCell>
+                      <TableCell className="text-right">{item.quantity}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(item.unitPrice)}</TableCell>
+                      <TableCell className="text-right font-medium">{formatCurrency(item.amount)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            
+            <div className="flex justify-end">
+              <div className="w-full md:w-80 p-6 bg-white rounded-xl shadow-sm border border-purple-100">
+                <div className="flex justify-between pb-3 border-b border-gray-100">
+                  <span className="text-gray-600">Subtotal:</span>
+                  <span className="font-medium">{formatCurrency(invoice.subtotal)}</span>
+                </div>
+                <div className="flex justify-between py-3 border-b border-gray-100">
+                  <span className="text-gray-600">Tax ({invoice.taxRate}%):</span>
+                  <span className="font-medium">{formatCurrency(invoice.taxAmount)}</span>
+                </div>
+                <div className="flex justify-between pt-3 font-bold text-lg">
+                  <span>Total:</span>
+                  <span className="text-purple-700">{formatCurrency(invoice.total)}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-10 p-6 bg-white rounded-xl shadow-sm border border-purple-100">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="bg-purple-200 p-2 rounded-lg">
+                  <Building className="h-4 w-4 text-purple-700" />
+                </div>
+                <h3 className="font-bold text-gray-700">Payment Details</h3>
+              </div>
+              <p className="text-gray-600 mb-3">Please include the invoice number when making payment.</p>
+              <div className="grid grid-cols-2 gap-2 max-w-md text-sm">
+                <div className="text-gray-500">Bank Name:</div>
+                <div className="font-medium">Example National Bank</div>
+                <div className="text-gray-500">Account Name:</div>
+                <div className="font-medium">{businessInfo.business_name || 'Your Company'}</div>
+                <div className="text-gray-500">Account Number:</div>
+                <div className="font-medium">XXXX-XXXX-XXXX</div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 p-4 text-white text-center text-sm">
+            <p>Thank you for your business! We look forward to working with you again.</p>
+          </div>
+        </div>
+      );
+      
     case 'modern':
       return (
         <div id="invoice-preview" className="bg-white rounded-lg overflow-hidden border print:border-0 print:shadow-none print:p-1">
@@ -204,7 +462,7 @@ const InvoicePreview = ({ invoice, template = 'classic' }: InvoicePreviewProps) 
           </div>
         </div>
       );
-      
+    
     case 'minimal':
       return (
         <div id="invoice-preview" className="bg-white rounded-lg overflow-hidden print:p-1">

@@ -30,6 +30,8 @@ export const downloadInvoice = async (invoiceNumber: string): Promise<void> => {
       transform: invoiceElement.style.transform,
       transition: invoiceElement.style.transition,
       boxShadow: invoiceElement.style.boxShadow,
+      width: invoiceElement.style.width,
+      margin: invoiceElement.style.margin,
     };
     
     // Enhance for PDF capture
@@ -37,16 +39,26 @@ export const downloadInvoice = async (invoiceNumber: string): Promise<void> => {
     invoiceElement.style.transform = 'none';
     invoiceElement.style.transition = 'none';
     invoiceElement.style.boxShadow = 'none';
+    invoiceElement.style.width = '100%';
+    invoiceElement.style.margin = '0';
     
     // Generate canvas with higher quality settings
     const canvas = await html2canvas(invoiceElement, {
-      scale: 3, // Higher scale for better quality
+      scale: 4, // Higher scale for better quality
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
       allowTaint: true,
       windowWidth: invoiceElement.scrollWidth,
       windowHeight: invoiceElement.scrollHeight,
+      onclone: (clonedDoc) => {
+        // Ensure all fonts are rendered properly in the cloned document
+        const clonedElement = clonedDoc.getElementById('invoice-preview');
+        if (clonedElement) {
+          clonedElement.style.pageBreakInside = 'avoid';
+          clonedElement.style.webkitPrintColorAdjust = 'exact';
+        }
+      }
     });
     
     // Calculate PDF dimensions to match the aspect ratio of the invoice
@@ -57,10 +69,11 @@ export const downloadInvoice = async (invoiceNumber: string): Promise<void> => {
     
     // Create PDF document with better formatting
     const pdf = new jsPDF({
-      orientation: 'portrait',
+      orientation: imgHeight > pageHeight ? 'portrait' : 'portrait',
       unit: 'mm',
       format: 'a4',
       compress: true,
+      hotfixes: ['px_scaling'],
     });
     
     // Set document properties
@@ -68,19 +81,20 @@ export const downloadInvoice = async (invoiceNumber: string): Promise<void> => {
       title: `Invoice-${invoiceNumber}`,
       subject: 'Invoice Document',
       creator: 'AI Invoice Generator',
+      author: 'AI Transactify',
     });
     
     let position = 0;
     
     // Add image to PDF with better positioning
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
     
     // Add multiple pages if needed
     let heightLeft = imgHeight - pageHeight;
     while (heightLeft > 0) {
       position = heightLeft - imgHeight;
       pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
       heightLeft -= pageHeight;
     }
     
@@ -92,10 +106,12 @@ export const downloadInvoice = async (invoiceNumber: string): Promise<void> => {
     invoiceElement.style.transform = originalStyles.transform;
     invoiceElement.style.transition = originalStyles.transition;
     invoiceElement.style.boxShadow = originalStyles.boxShadow;
+    invoiceElement.style.width = originalStyles.width;
+    invoiceElement.style.margin = originalStyles.margin;
     
     toast.success('PDF generated successfully');
   } catch (error) {
     console.error('Error generating PDF:', error);
-    toast.error('Failed to generate PDF');
+    toast.error('Failed to generate PDF. Please try again.');
   }
 };
