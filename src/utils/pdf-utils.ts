@@ -44,7 +44,7 @@ export const downloadInvoice = async (invoiceNumber: string): Promise<void> => {
     
     // Generate canvas with higher quality settings
     const canvas = await html2canvas(invoiceElement, {
-      scale: 5, // Higher scale for even better quality (increased from 4)
+      scale: 4, // Higher scale for better quality
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
@@ -56,20 +56,8 @@ export const downloadInvoice = async (invoiceNumber: string): Promise<void> => {
         const clonedElement = clonedDoc.getElementById('invoice-preview');
         if (clonedElement) {
           clonedElement.style.pageBreakInside = 'avoid';
-          // Fixed: using printColorAdjust instead of webkitPrintColorAdjust
+          // Fix: replace webkitPrintColorAdjust with printColorAdjust
           clonedElement.style.printColorAdjust = 'exact';
-          
-          // Make sure all content is visible
-          const tables = clonedElement.querySelectorAll('table');
-          tables.forEach(table => {
-            table.style.width = '100%';
-            table.style.tableLayout = 'fixed';
-          });
-          
-          // Ensure text is sharp and clear
-          clonedElement.style.fontSmoothing = 'antialiased';
-          clonedElement.style.webkitFontSmoothing = 'antialiased';
-          clonedElement.style.MozOsxFontSmoothing = 'grayscale';
         }
       }
     });
