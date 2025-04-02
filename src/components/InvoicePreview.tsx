@@ -1,4 +1,3 @@
-
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -96,11 +95,10 @@ const InvoicePreview = ({ invoice, template = 'classic' }: InvoicePreviewProps) 
     fetchBusinessInfo();
   }, [user]);
 
-  // Render the selected template
   switch (template) {
     case 'modern':
       return (
-        <div className="bg-white rounded-lg overflow-hidden border print:border-0 print:shadow-none print:p-1">
+        <div id="invoice-preview" className="bg-white rounded-lg overflow-hidden border print:border-0 print:shadow-none print:p-1">
           <div className="bg-primary text-primary-foreground p-8 print:p-6">
             <div className="flex justify-between items-start">
               <div>
@@ -192,7 +190,7 @@ const InvoicePreview = ({ invoice, template = 'classic' }: InvoicePreviewProps) 
       
     case 'minimal':
       return (
-        <div className="bg-white rounded-lg overflow-hidden print:p-1">
+        <div id="invoice-preview" className="bg-white rounded-lg overflow-hidden print:p-1">
           <div className="p-6 print:p-4">
             <div className="flex flex-col space-y-6">
               <div className="flex justify-between items-start">
@@ -266,12 +264,10 @@ const InvoicePreview = ({ invoice, template = 'classic' }: InvoicePreviewProps) 
         </div>
       );
       
-    // Classic template (default)
     default:
       return (
-        <div className="bg-white rounded-lg overflow-hidden border p-6 print:border-0 print:p-1 print:shadow-none">
+        <div id="invoice-preview" className="bg-white rounded-lg overflow-hidden border p-6 print:border-0 print:p-1 print:shadow-none">
           <div className="flex flex-col space-y-6">
-            {/* Header */}
             <div className="flex justify-between items-start">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">INVOICE</h1>
@@ -288,7 +284,6 @@ const InvoicePreview = ({ invoice, template = 'classic' }: InvoicePreviewProps) 
               </div>
             </div>
 
-            {/* Dates & Client Info */}
             <div className="grid sm:grid-cols-2 gap-6 pt-4 border-t">
               <div>
                 <h2 className="text-sm font-semibold text-gray-500 uppercase mb-2">Bill To</h2>
@@ -309,7 +304,6 @@ const InvoicePreview = ({ invoice, template = 'classic' }: InvoicePreviewProps) 
               </div>
             </div>
 
-            {/* Items Table */}
             <div className="pt-4">
               <Table>
                 <TableHeader>
@@ -347,7 +341,6 @@ const InvoicePreview = ({ invoice, template = 'classic' }: InvoicePreviewProps) 
               </Table>
             </div>
 
-            {/* Footer */}
             <div className="mt-6 pt-4 border-t text-sm text-gray-500">
               <p className="font-medium mb-1">Payment Terms</p>
               <p>Please pay the total amount by the due date. Thank you for your business!</p>

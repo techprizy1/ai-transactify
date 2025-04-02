@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -134,9 +133,18 @@ const Invoice = () => {
     printInvoice();
   };
   
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (invoiceData) {
-      downloadInvoice(invoiceData.invoiceNumber);
+      try {
+        toast.loading('Generating PDF...');
+        await downloadInvoice(invoiceData.invoiceNumber);
+        toast.success('PDF downloaded successfully');
+      } catch (error) {
+        console.error('Error downloading invoice:', error);
+        toast.error('Failed to download PDF');
+      } finally {
+        toast.dismiss();
+      }
     }
   };
   
