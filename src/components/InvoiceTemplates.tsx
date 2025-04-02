@@ -32,27 +32,27 @@ const InvoiceTemplates: React.FC<InvoiceTemplatesProps> = ({
   ];
 
   return (
-    <div className="space-y-3">
-      <h3 className="text-sm font-medium">Select Template</h3>
-      <div className="grid grid-cols-3 gap-3">
+    <div className="space-y-4">
+      <h3 className="text-base font-medium">Select Template</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {templates.map((template) => (
           <div
             key={template.id}
             className={`
-              relative rounded-md cursor-pointer border p-3 hover:bg-muted/50 transition-colors
+              relative rounded-lg cursor-pointer border p-4 hover:bg-muted/50 transition-colors
               ${selectedTemplate === template.id ? 'border-primary ring-2 ring-primary/20' : 'border-border'}
             `}
             onClick={() => onSelectTemplate(template.id)}
           >
             {selectedTemplate === template.id && (
-              <div className="absolute top-2 right-2 h-4 w-4 rounded-full bg-primary flex items-center justify-center">
+              <div className="absolute top-3 right-3 h-5 w-5 rounded-full bg-primary flex items-center justify-center">
                 <Check className="h-3 w-3 text-primary-foreground" />
               </div>
             )}
-            <div className="h-16 w-full bg-gradient-to-br 
-              from-muted/80 to-muted/30 rounded mb-2 
-              flex items-center justify-center text-xs text-muted-foreground">
-              {template.id.charAt(0).toUpperCase()}
+            <div className="h-20 w-full bg-gradient-to-br 
+              from-muted/80 to-muted/30 rounded-md mb-3 
+              flex items-center justify-center text-sm text-muted-foreground">
+              {template.name.charAt(0).toUpperCase()}
             </div>
             <div className="text-sm font-medium">{template.name}</div>
             <div className="text-xs text-muted-foreground mt-1">{template.description}</div>

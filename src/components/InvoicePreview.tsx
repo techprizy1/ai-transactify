@@ -1,3 +1,4 @@
+
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -99,15 +100,15 @@ const InvoicePreview = ({ invoice, template = 'classic' }: InvoicePreviewProps) 
     case 'modern':
       return (
         <div id="invoice-preview" className="bg-white rounded-lg overflow-hidden border print:border-0 print:shadow-none print:p-1">
-          <div className="bg-primary text-primary-foreground p-8 print:p-6">
-            <div className="flex justify-between items-start">
+          <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground p-8 print:p-6">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-6">
               <div>
-                <h1 className="text-3xl font-bold">INVOICE</h1>
-                <p className="mt-1 opacity-80">#{invoice.invoiceNumber}</p>
+                <h1 className="text-4xl font-bold tracking-tight">INVOICE</h1>
+                <p className="mt-2 opacity-90 text-lg">#{invoice.invoiceNumber}</p>
               </div>
-              <div className="text-right">
-                <div className="font-medium text-xl">{businessInfo.business_name || 'Your Company Name'}</div>
-                <div className="mt-1 opacity-80">
+              <div className="text-left md:text-right">
+                <div className="font-medium text-2xl">{businessInfo.business_name || 'Your Company Name'}</div>
+                <div className="mt-2 opacity-90">
                   <p>{businessInfo.business_address || 'Business Address Not Set'}</p>
                   <p>{businessInfo.contact_number || 'Contact Number Not Set'}</p>
                 </div>
@@ -116,23 +117,23 @@ const InvoicePreview = ({ invoice, template = 'classic' }: InvoicePreviewProps) 
           </div>
           
           <div className="p-8 print:p-6">
-            <div className="grid grid-cols-2 gap-8 mb-8">
-              <div>
-                <h2 className="text-sm uppercase text-muted-foreground font-semibold tracking-wider mb-3">Bill To</h2>
+            <div className="grid md:grid-cols-2 gap-8 mb-10">
+              <div className="bg-muted/5 p-6 rounded-lg border border-muted/10">
+                <h2 className="text-sm uppercase text-muted-foreground font-semibold tracking-wider mb-4">Bill To</h2>
                 <div className="text-gray-800">
                   <p className="font-medium text-xl">{invoice.billTo.name}</p>
-                  <p className="whitespace-pre-line mt-2 text-muted-foreground">{invoice.billTo.address}</p>
-                  {invoice.billTo.email && <p className="text-muted-foreground">{invoice.billTo.email}</p>}
+                  <p className="whitespace-pre-line mt-3 text-muted-foreground">{invoice.billTo.address}</p>
+                  {invoice.billTo.email && <p className="text-muted-foreground mt-1">{invoice.billTo.email}</p>}
                 </div>
               </div>
-              <div>
-                <h2 className="text-sm uppercase text-muted-foreground font-semibold tracking-wider mb-3">Invoice Details</h2>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
+              <div className="bg-muted/5 p-6 rounded-lg border border-muted/10">
+                <h2 className="text-sm uppercase text-muted-foreground font-semibold tracking-wider mb-4">Invoice Details</h2>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center py-2 border-b border-muted/20">
                     <span className="text-muted-foreground">Issue Date:</span>
                     <span className="font-medium">{formatDate(invoice.date)}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center py-2 border-b border-muted/20">
                     <span className="text-muted-foreground">Due Date:</span>
                     <span className="font-medium">{formatDate(invoice.dueDate)}</span>
                   </div>
@@ -140,23 +141,23 @@ const InvoicePreview = ({ invoice, template = 'classic' }: InvoicePreviewProps) 
               </div>
             </div>
             
-            <div className="overflow-hidden rounded-lg border mb-8">
+            <div className="overflow-hidden rounded-lg border mb-10 shadow-sm">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead className="w-[50%]">Description</TableHead>
-                    <TableHead className="text-right">Quantity</TableHead>
-                    <TableHead className="text-right">Unit Price</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead className="w-[50%] py-4">Description</TableHead>
+                    <TableHead className="text-right py-4">Quantity</TableHead>
+                    <TableHead className="text-right py-4">Unit Price</TableHead>
+                    <TableHead className="text-right py-4">Amount</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {invoice.items.map((item, i) => (
                     <TableRow key={i} className="hover:bg-muted/5">
-                      <TableCell className="font-medium">{item.description}</TableCell>
-                      <TableCell className="text-right">{item.quantity}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(item.unitPrice)}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
+                      <TableCell className="font-medium py-4">{item.description}</TableCell>
+                      <TableCell className="text-right py-4">{item.quantity}</TableCell>
+                      <TableCell className="text-right py-4">{formatCurrency(item.unitPrice)}</TableCell>
+                      <TableCell className="text-right py-4">{formatCurrency(item.amount)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -164,7 +165,7 @@ const InvoicePreview = ({ invoice, template = 'classic' }: InvoicePreviewProps) 
             </div>
             
             <div className="flex justify-end">
-              <div className="w-80 space-y-2">
+              <div className="w-full md:w-80 space-y-3 bg-muted/5 p-6 rounded-lg border border-muted/10">
                 <div className="flex justify-between pb-2">
                   <span className="text-muted-foreground">Subtotal:</span>
                   <span>{formatCurrency(invoice.subtotal)}</span>
@@ -173,15 +174,15 @@ const InvoicePreview = ({ invoice, template = 'classic' }: InvoicePreviewProps) 
                   <span className="text-muted-foreground">Tax ({invoice.taxRate}%):</span>
                   <span>{formatCurrency(invoice.taxAmount)}</span>
                 </div>
-                <div className="flex justify-between pt-2 border-t font-medium text-lg">
+                <div className="flex justify-between pt-3 border-t font-medium text-lg">
                   <span>Total:</span>
-                  <span>{formatCurrency(invoice.total)}</span>
+                  <span className="text-primary font-bold">{formatCurrency(invoice.total)}</span>
                 </div>
               </div>
             </div>
             
             <div className="mt-12 pt-6 border-t text-sm text-muted-foreground">
-              <p className="font-medium mb-1">Payment Terms</p>
+              <p className="font-medium mb-2">Payment Terms</p>
               <p>Please pay the total amount by the due date. Thank you for your business!</p>
             </div>
           </div>
