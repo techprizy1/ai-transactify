@@ -56,7 +56,8 @@ export const downloadInvoice = async (invoiceNumber: string): Promise<void> => {
         const clonedElement = clonedDoc.getElementById('invoice-preview');
         if (clonedElement) {
           clonedElement.style.pageBreakInside = 'avoid';
-          clonedElement.style.webkitPrintColorAdjust = 'exact';
+          // Fix: replace webkitPrintColorAdjust with printColorAdjust
+          clonedElement.style.printColorAdjust = 'exact';
         }
       }
     });
