@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Check } from 'lucide-react';
+import { Check, Layout, FileText, LayoutGrid } from 'lucide-react';
 
 export type InvoiceTemplateType = 'classic' | 'modern' | 'minimal';
 
@@ -13,21 +13,33 @@ const InvoiceTemplates: React.FC<InvoiceTemplatesProps> = ({
   selectedTemplate, 
   onSelectTemplate 
 }) => {
-  const templates: { id: InvoiceTemplateType; name: string; description: string }[] = [
+  const templates: { 
+    id: InvoiceTemplateType; 
+    name: string; 
+    description: string;
+    icon: React.ReactNode;
+    gradient: string;
+  }[] = [
     {
       id: 'classic',
       name: 'Classic',
       description: 'Traditional invoice layout with a professional look',
+      icon: <FileText className="h-5 w-5" />,
+      gradient: 'from-blue-100 to-blue-50',
     },
     {
       id: 'modern',
       name: 'Modern',
       description: 'Contemporary design with clean lines and visual hierarchy',
+      icon: <Layout className="h-5 w-5" />,
+      gradient: 'from-purple-100 to-indigo-50',
     },
     {
       id: 'minimal',
       name: 'Minimal',
       description: 'Simplified layout focusing on essential information',
+      icon: <LayoutGrid className="h-5 w-5" />,
+      gradient: 'from-gray-100 to-gray-50',
     },
   ];
 
@@ -39,8 +51,10 @@ const InvoiceTemplates: React.FC<InvoiceTemplatesProps> = ({
           <div
             key={template.id}
             className={`
-              relative rounded-lg cursor-pointer border p-4 hover:bg-muted/50 transition-colors
-              ${selectedTemplate === template.id ? 'border-primary ring-2 ring-primary/20' : 'border-border'}
+              relative rounded-lg cursor-pointer border p-4 hover:bg-muted/30 transition-all
+              ${selectedTemplate === template.id 
+                ? 'border-primary ring-2 ring-primary/20 shadow-sm' 
+                : 'border-border hover:shadow-sm'}
             `}
             onClick={() => onSelectTemplate(template.id)}
           >
@@ -49,10 +63,12 @@ const InvoiceTemplates: React.FC<InvoiceTemplatesProps> = ({
                 <Check className="h-3 w-3 text-primary-foreground" />
               </div>
             )}
-            <div className="h-20 w-full bg-gradient-to-br 
-              from-muted/80 to-muted/30 rounded-md mb-3 
-              flex items-center justify-center text-sm text-muted-foreground">
-              {template.name.charAt(0).toUpperCase()}
+            <div className={`h-24 w-full bg-gradient-to-br ${template.gradient} rounded-md mb-3 
+              flex flex-col items-center justify-center text-sm text-muted-foreground p-2`}>
+              <div className="bg-white/80 rounded-full p-2 mb-2">
+                {template.icon}
+              </div>
+              <span className="text-xs font-medium">{template.name}</span>
             </div>
             <div className="text-sm font-medium">{template.name}</div>
             <div className="text-xs text-muted-foreground mt-1">{template.description}</div>
