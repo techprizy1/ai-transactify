@@ -56,8 +56,17 @@ export const downloadInvoice = async (invoiceNumber: string): Promise<void> => {
         const clonedElement = clonedDoc.getElementById('invoice-preview');
         if (clonedElement) {
           clonedElement.style.pageBreakInside = 'avoid';
-          // Fix: replace webkitPrintColorAdjust with printColorAdjust
+          // Fix: replacing fontSmoothing properties with standard CSS
+          // Apply standard CSS for better text rendering
           clonedElement.style.printColorAdjust = 'exact';
+          
+          // Use setAttribute for non-standard properties to avoid TypeScript errors
+          const style = clonedElement.style as any;
+          // Apply font smoothing through setAttribute to bypass TypeScript checking
+          clonedElement.setAttribute('style', 
+            clonedElement.getAttribute('style') + 
+            '; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;'
+          );
         }
       }
     });
