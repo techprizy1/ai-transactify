@@ -1,3 +1,4 @@
+
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Sidebar,
@@ -22,7 +23,10 @@ import {
   LogOut,
   Receipt,
   Settings,
-  Sparkles
+  Sparkles,
+  BarChart3,
+  PieChart,
+  BookText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/context/AuthContext';
@@ -91,6 +95,60 @@ export function AppSidebar() {
                 
                 return (
                   <div key={path} className="animate-fadeIn" style={{ animationDelay: `${i * 100}ms` }}>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton 
+                        asChild 
+                        isActive={isCurrentActive} 
+                        tooltip={tooltips[path as keyof typeof tooltips]}
+                        className={`${isCurrentActive ? 'bg-primary/10 hover:bg-primary/15' : 'hover:bg-accent/50'} transition-all duration-200 rounded-lg my-1`}
+                      >
+                        <Link to={path} className="flex items-center gap-3 p-2.5 pl-3">
+                          {icons[path as keyof typeof icons]}
+                          <span className={`${isCurrentActive ? 'font-medium text-primary' : ''}`}>
+                            {labels[path as keyof typeof labels]}
+                          </span>
+                          {isCurrentActive && (
+                            <div
+                              className="absolute left-0 w-1 h-6 bg-primary rounded-r-full"
+                            />
+                          )}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </div>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Reporting Group - NEW SECTION */}
+        <SidebarGroup className="mt-6 px-3">
+          <SidebarGroupLabel className="px-4 text-xs uppercase tracking-widest text-muted-foreground/80 font-semibold">
+            Reporting
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {mounted && ['/pl-account', '/balance-sheet', '/financial-analysis'].map((path, i) => {
+                const isCurrentActive = isActive(path);
+                const icons = {
+                  '/pl-account': <BarChart3 className={`${isCurrentActive ? 'text-primary' : ''}`} />,
+                  '/balance-sheet': <BookText className={`${isCurrentActive ? 'text-primary' : ''}`} />,
+                  '/financial-analysis': <PieChart className={`${isCurrentActive ? 'text-primary' : ''}`} />
+                };
+                const labels = {
+                  '/pl-account': 'P&L Account',
+                  '/balance-sheet': 'Balance Sheet',
+                  '/financial-analysis': 'Financial Analysis'
+                };
+                const tooltips = {
+                  '/pl-account': 'Profit & Loss Account',
+                  '/balance-sheet': 'Balance Sheet',
+                  '/financial-analysis': 'Financial Analysis'
+                };
+                
+                return (
+                  <div key={path} className="animate-fadeIn" style={{ animationDelay: `${(i + 3) * 100}ms` }}>
                     <SidebarMenuItem>
                       <SidebarMenuButton 
                         asChild 

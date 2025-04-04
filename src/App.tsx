@@ -17,6 +17,9 @@ import SalesReport from "./pages/SalesReport";
 import PurchaseOrders from "./pages/PurchaseOrders";
 import PurchaseReport from "./pages/PurchaseReport";
 import ExpenseReport from "./pages/ExpenseReport";
+import PLAccount from "./pages/PLAccount";
+import BalanceSheet from "./pages/BalanceSheet";
+import FinancialAnalysis from "./pages/FinancialAnalysis";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/AppSidebar";
 
@@ -106,6 +109,39 @@ const App = () => (
                 </SidebarProvider>
               </ProtectedRoute>
             } />
+            
+            {/* New Reporting routes */}
+            <Route path="/pl-account" element={
+              <ProtectedRoute>
+                <SidebarProvider>
+                  <div className="flex w-full min-h-screen">
+                    <AppSidebar />
+                    <PLAccount />
+                  </div>
+                </SidebarProvider>
+              </ProtectedRoute>
+            } />
+            <Route path="/balance-sheet" element={
+              <ProtectedRoute>
+                <SidebarProvider>
+                  <div className="flex w-full min-h-screen">
+                    <AppSidebar />
+                    <BalanceSheet />
+                  </div>
+                </SidebarProvider>
+              </ProtectedRoute>
+            } />
+            <Route path="/financial-analysis" element={
+              <ProtectedRoute>
+                <SidebarProvider>
+                  <div className="flex w-full min-h-screen">
+                    <AppSidebar />
+                    <FinancialAnalysis />
+                  </div>
+                </SidebarProvider>
+              </ProtectedRoute>
+            } />
+            
             <Route path="/profile" element={
               <ProtectedRoute>
                 <SidebarProvider>
