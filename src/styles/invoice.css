@@ -1,0 +1,209 @@
+
+/* A4 page style for printing */
+.invoice-container {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 20mm;
+  margin: 0 auto;
+  background: white;
+  box-sizing: border-box;
+  font-family: 'Arial', sans-serif;
+  color: #333;
+  page-break-after: always;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* Setting up printing properties */
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  
+  html, body {
+    width: 210mm;
+    height: 297mm;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .invoice-container {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 20mm;
+    margin: 0;
+    border: none;
+    box-shadow: none;
+    page-break-after: always;
+  }
+}
+
+/* Invoice header styles */
+.invoice-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  border-bottom: 2px solid #eaeaea;
+  padding-bottom: 20px;
+}
+
+.invoice-company h1 {
+  font-size: 24px;
+  margin: 0 0 10px 0;
+  color: #2c3e50;
+}
+
+.invoice-company p {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+.invoice-details {
+  text-align: right;
+}
+
+.invoice-details h2 {
+  font-size: 28px;
+  color: #3498db;
+  margin: 0 0 15px 0;
+}
+
+.invoice-details p {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+/* Recipient section */
+.invoice-recipient {
+  margin-bottom: 30px;
+}
+
+.invoice-recipient h3 {
+  font-size: 16px;
+  margin: 0 0 10px 0;
+  color: #555;
+}
+
+.invoice-recipient p {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+/* Financial Report Header */
+.financial-report-header {
+  background-color: #f8f9fa;
+  padding: 15px;
+  margin-bottom: 30px;
+  border-radius: 5px;
+  border-left: 4px solid #3498db;
+}
+
+.financial-report-header h3 {
+  margin: 0 0 15px 0;
+  color: #2c3e50;
+  font-size: 18px;
+}
+
+.financial-summary {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px dashed #e0e0e0;
+}
+
+.summary-item:last-child {
+  border-bottom: none;
+}
+
+.net-result {
+  font-weight: bold;
+  margin-top: 5px;
+  padding-top: 10px;
+  border-top: 2px solid #e0e0e0;
+}
+
+.income-amount {
+  color: #27ae60;
+}
+
+.expense-amount {
+  color: #e74c3c;
+}
+
+.profit-amount {
+  color: #27ae60;
+  font-weight: bold;
+}
+
+.loss-amount {
+  color: #e74c3c;
+  font-weight: bold;
+}
+
+/* Invoice items table */
+.invoice-items {
+  margin-bottom: 30px;
+}
+
+.invoice-items table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.invoice-items th {
+  background-color: #f2f2f2;
+  padding: 12px;
+  text-align: left;
+  font-weight: bold;
+  border-bottom: 2px solid #ddd;
+}
+
+.invoice-items td {
+  padding: 12px;
+  border-bottom: 1px solid #eaeaea;
+  font-size: 14px;
+  word-break: break-word;
+}
+
+.invoice-items td.amount {
+  text-align: right;
+}
+
+.invoice-items tfoot td {
+  padding: 12px;
+  border-top: 2px solid #eaeaea;
+  font-weight: bold;
+}
+
+/* Invoice footer */
+.invoice-footer {
+  margin-top: 50px;
+  text-align: center;
+  font-size: 14px;
+  color: #7f8c8d;
+  border-top: 1px solid #eaeaea;
+  padding-top: 20px;
+}
+
+/* Make sure all content fits on one page */
+@media print {
+  .invoice-container {
+    overflow: hidden;
+    break-inside: avoid;
+  }
+  
+  table {
+    page-break-inside: avoid;
+  }
+  
+  tr {
+    page-break-inside: avoid;
+  }
+}
