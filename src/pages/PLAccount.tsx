@@ -1,16 +1,16 @@
 
 import React from 'react';
 import { SidebarInset } from "@/components/ui/sidebar";
-import { ReportSummary } from '@/components/report/ReportSummary';
+import ReportSummary from '@/components/report/ReportSummary';
 import { Transaction } from '@/lib/types';
 
 // Mock data for demonstration
 const mockTransactions: Transaction[] = [
-  { id: '1', amount: 5000, description: 'Sales Revenue', date: new Date().toISOString(), type: 'income', category: 'Sales' },
-  { id: '2', amount: 3000, description: 'Consulting Services', date: new Date().toISOString(), type: 'income', category: 'Services' },
-  { id: '3', amount: 1500, description: 'Rent', date: new Date().toISOString(), type: 'expense', category: 'Office' },
-  { id: '4', amount: 800, description: 'Utilities', date: new Date().toISOString(), type: 'expense', category: 'Office' },
-  { id: '5', amount: 1200, description: 'Salary', date: new Date().toISOString(), type: 'expense', category: 'Staff' },
+  { id: '1', amount: 5000, description: 'Sales Revenue', date: new Date().toISOString(), type: 'income', category: 'Sales', created_at: new Date().toISOString() },
+  { id: '2', amount: 3000, description: 'Consulting Services', date: new Date().toISOString(), type: 'income', category: 'Services', created_at: new Date().toISOString() },
+  { id: '3', amount: 1500, description: 'Rent', date: new Date().toISOString(), type: 'expense', category: 'Office', created_at: new Date().toISOString() },
+  { id: '4', amount: 800, description: 'Utilities', date: new Date().toISOString(), type: 'expense', category: 'Office', created_at: new Date().toISOString() },
+  { id: '5', amount: 1200, description: 'Salary', date: new Date().toISOString(), type: 'expense', category: 'Staff', created_at: new Date().toISOString() },
 ];
 
 const PLAccount = () => {
