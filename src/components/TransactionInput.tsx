@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,6 +7,7 @@ import { SendHorizontal, Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 
 interface TransactionInputProps {
   onTransactionCreated: (transaction: AITransactionResponse) => void;
@@ -58,7 +58,7 @@ const TransactionInput = ({ onTransactionCreated }: TransactionInputProps) => {
       {/* Show Pro badge if user is a pro user */}
       {isPro && (
         <div className="mb-4 flex items-center">
-          <Badge variant="default" className="bg-gradient-to-r from-amber-400 to-amber-600 text-white">
+          <Badge variant="premium" className="bg-gradient-to-r from-amber-400 to-amber-600 text-white">
             <Sparkles className="w-3.5 h-3.5 mr-1" /> PRO
           </Badge>
           <span className="text-xs ml-2 text-muted-foreground">Unlimited transactions</span>
