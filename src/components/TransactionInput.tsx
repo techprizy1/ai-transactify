@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,7 +8,8 @@ import { SendHorizontal, Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
+// Import the Badge from our custom implementation that supports the "premium" variant
+import { Badge } from "@/components/Badge";
 
 interface TransactionInputProps {
   onTransactionCreated: (transaction: AITransactionResponse) => void;
