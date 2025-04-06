@@ -8,116 +8,67 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { ArrowUp, DollarSign, Calculator, TrendingUp, TrendingDown, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
 
 const Dashboard = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
   
   useEffect(() => {
-    const mockTransactions: Transaction[] = [
-      {
-        id: '1',
-        description: 'Received payment from Smith Co.',
-        amount: 2500,
-        type: 'income',
-        category: 'Client Payment',
-        date: '2023-05-20',
-        created_at: '2023-05-20T14:30:00Z',
-      },
-      {
-        id: '2',
-        description: 'Office rent for May',
-        amount: 1800,
-        type: 'expense',
-        category: 'Rent',
-        date: '2023-05-01',
-        created_at: '2023-05-01T09:15:00Z',
-      },
-      {
-        id: '3',
-        description: 'New Dell laptops (3 units)',
-        amount: 3600,
-        type: 'purchase',
-        category: 'Equipment',
-        date: '2023-05-15',
-        created_at: '2023-05-15T11:45:00Z',
-      },
-      {
-        id: '4',
-        description: 'Software license renewal',
-        amount: 299,
-        type: 'expense',
-        category: 'Software',
-        date: '2023-05-10',
-        created_at: '2023-05-10T16:20:00Z',
-      },
-      {
-        id: '5',
-        description: 'Consulting services to Johnson Inc',
-        amount: 1750,
-        type: 'sale',
-        category: 'Services',
-        date: '2023-05-18',
-        created_at: '2023-05-18T15:30:00Z',
-      },
-      {
-        id: '6',
-        description: 'Office supplies from Staples',
-        amount: 127.50,
-        type: 'purchase',
-        category: 'Office Supplies',
-        date: '2023-05-08',
-        created_at: '2023-05-08T10:25:00Z',
-      },
-      {
-        id: '7',
-        description: 'Client dinner with potential investors',
-        amount: 215.80,
-        type: 'expense',
-        category: 'Meals & Entertainment',
-        date: '2023-05-12',
-        created_at: '2023-05-12T20:45:00Z',
-      },
-      {
-        id: '8',
-        description: 'Monthly subscription revenue',
-        amount: 3200,
-        type: 'income',
-        category: 'Subscription',
-        date: '2023-05-01',
-        created_at: '2023-05-01T00:05:00Z',
-      },
-    ];
+    const fetchTransactions = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('transactions')
+          .select('*')
+          .order('created_at', { ascending: false });
+          
+        if (error) {
+          throw error;
+        }
+        
+        setTransactions(data as Transaction[]);
+      } catch (error) {
+        console.error('Failed to fetch transactions:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load transaction data",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    setTransactions(mockTransactions);
-  }, []);
+    fetchTransactions();
+  }, [toast]);
   
-  const totalIncome = transactions
-    .filter(t => t.type === 'income' || t.type === 'sale')
-    .reduce((sum, t) => sum + t.amount, 0);
-    
-  const totalExpense = transactions
-    .filter(t => t.type === 'expense' || t.type === 'purchase')
-    .reduce((sum, t) => sum + t.amount, 0);
-    
+  // Filter transactions by type
+  const salesTransactions = transactions.filter(t => t.type === 'income' || t.type === 'sale');
+  const purchaseTransactions = transactions.filter(t => t.type === 'purchase');
+  const expenseTransactions = transactions.filter(t => t.type === 'expense');
+  
+  // Calculate totals
+  const totalIncome = salesTransactions.reduce((sum, t) => sum + t.amount, 0);
+  const totalExpense = [...purchaseTransactions, ...expenseTransactions].reduce((sum, t) => sum + t.amount, 0);
   const netProfit = totalIncome - totalExpense;
   
-  // Count transactions by type
-  const salesCount = transactions.filter(t => t.type === 'income' || t.type === 'sale').length;
-  const purchaseCount = transactions.filter(t => t.type === 'purchase').length;
-  const expenseCount = transactions.filter(t => t.type === 'expense').length;
+  // Calculate sales metrics
+  const salesCount = salesTransactions.length;
+  const salesTotal = salesTransactions.reduce((sum, t) => sum + t.amount, 0);
+  const salesAverage = salesCount > 0 ? salesTotal / salesCount : 0;
   
-  // Calculate totals by type
-  const salesTotal = transactions
-    .filter(t => t.type === 'income' || t.type === 'sale')
-    .reduce((sum, t) => sum + t.amount, 0);
-    
-  const purchaseTotal = transactions
-    .filter(t => t.type === 'purchase')
-    .reduce((sum, t) => sum + t.amount, 0);
-    
-  const expenseTotal = transactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0);
+  // Calculate purchase metrics
+  const purchaseCount = purchaseTransactions.length;
+  const purchaseTotal = purchaseTransactions.reduce((sum, t) => sum + t.amount, 0);
+  const purchaseAverage = purchaseCount > 0 ? purchaseTotal / purchaseCount : 0;
+  
+  // Calculate expense metrics
+  const expenseCount = expenseTransactions.length;
+  const expenseTotal = expenseTransactions.reduce((sum, t) => sum + t.amount, 0);
+  const expenseAverage = expenseCount > 0 ? expenseTotal / expenseCount : 0;
   
   return (
     <div className="min-h-screen pt-20">
@@ -184,13 +135,17 @@ const Dashboard = () => {
               </p>
               <div className="mt-4 space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>Daily Average</span>
-                  <span className="font-medium">₹{(salesTotal / 30).toFixed(2)}</span>
+                  <span>Average Sale</span>
+                  <span className="font-medium">₹{salesAverage.toFixed(2)}</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-green-500 h-2 rounded-full" style={{ width: '75%' }}></div>
-                </div>
-                <p className="text-xs text-muted-foreground">75% of monthly target</p>
+                {salesTransactions.length > 0 && (
+                  <>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="bg-green-500 h-2 rounded-full" style={{ width: `${Math.min(salesCount * 10, 100)}%` }}></div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Based on {salesCount} transactions</p>
+                  </>
+                )}
               </div>
             </CardContent>
             <CardFooter>
@@ -220,13 +175,17 @@ const Dashboard = () => {
               </p>
               <div className="mt-4 space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>Budget Utilization</span>
-                  <span className="font-medium">60%</span>
+                  <span>Average Purchase</span>
+                  <span className="font-medium">₹{purchaseAverage.toFixed(2)}</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-amber-500 h-2 rounded-full" style={{ width: '60%' }}></div>
-                </div>
-                <p className="text-xs text-muted-foreground">40% of budget remaining</p>
+                {purchaseTransactions.length > 0 && (
+                  <>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="bg-amber-500 h-2 rounded-full" style={{ width: `${Math.min(purchaseCount * 10, 100)}%` }}></div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Based on {purchaseCount} transactions</p>
+                  </>
+                )}
               </div>
             </CardContent>
             <CardFooter>
@@ -256,13 +215,17 @@ const Dashboard = () => {
               </p>
               <div className="mt-4 space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>Monthly Comparison</span>
-                  <span className="font-medium">+8%</span>
+                  <span>Average Expense</span>
+                  <span className="font-medium">₹{expenseAverage.toFixed(2)}</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-purple-500 h-2 rounded-full" style={{ width: '85%' }}></div>
-                </div>
-                <p className="text-xs text-muted-foreground">8% higher than last month</p>
+                {expenseTransactions.length > 0 && (
+                  <>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="bg-purple-500 h-2 rounded-full" style={{ width: `${Math.min(expenseCount * 10, 100)}%` }}></div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Based on {expenseCount} transactions</p>
+                  </>
+                )}
               </div>
             </CardContent>
             <CardFooter>
@@ -284,13 +247,23 @@ const Dashboard = () => {
             </Button>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {transactions.slice(0, 5).map((transaction) => (
-                <Link key={transaction.id} to="/transactions" className="block hover:bg-accent/20 rounded-md transition-colors">
-                  <TransactionCard transaction={transaction} />
-                </Link>
-              ))}
-            </div>
+            {loading ? (
+              <div className="text-center py-10">
+                <p className="text-muted-foreground">Loading transactions...</p>
+              </div>
+            ) : transactions.length > 0 ? (
+              <div className="space-y-3">
+                {transactions.slice(0, 5).map((transaction) => (
+                  <Link key={transaction.id} to="/transactions" className="block hover:bg-accent/20 rounded-md transition-colors">
+                    <TransactionCard transaction={transaction} />
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-10">
+                <p className="text-muted-foreground">No transactions found</p>
+              </div>
+            )}
           </CardContent>
           <CardFooter>
             <Button asChild variant="outline" className="w-full">
