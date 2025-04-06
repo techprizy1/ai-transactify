@@ -8,11 +8,12 @@ import { Transaction, AITransactionResponse } from '@/lib/types';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import ProUpgrade from '@/components/ProUpgrade';
 
 const Transactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, isPro, checkTransactionLimit } = useAuth();
   
   // Load transactions from database on component mount
   useEffect(() => {
@@ -44,6 +45,13 @@ const Transactions = () => {
   const handleTransactionCreated = async (aiResponse: AITransactionResponse) => {
     if (!user) {
       toast.error('You must be logged in to create transactions');
+      return;
+    }
+    
+    // Check transaction limit before proceeding
+    const canCreateTransaction = await checkTransactionLimit();
+    if (!canCreateTransaction) {
+      toast.error('Transaction limit reached. Upgrade to Pro for unlimited transactions.');
       return;
     }
     
@@ -109,6 +117,12 @@ const Transactions = () => {
             <div className="grid md:grid-cols-2 gap-8">
               <div className="space-y-8">
                 <TransactionInput onTransactionCreated={handleTransactionCreated} />
+                
+                {!isPro && (
+                  <div className="mt-8">
+                    <ProUpgrade variant="card" />
+                  </div>
+                )}
                 
                 <div className="glass-panel p-6 animate-fade-in">
                   <h2 className="text-xl font-semibold mb-4">Example phrases</h2>
