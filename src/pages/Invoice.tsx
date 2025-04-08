@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -74,7 +75,10 @@ const Invoice = () => {
           .eq('id', user.id)
           .maybeSingle();
           
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching business info:', error);
+          return;
+        }
         
         if (data) {
           setBusinessInfo({

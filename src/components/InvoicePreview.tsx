@@ -33,6 +33,7 @@ interface BusinessInfo {
   business_name: string | null;
   business_address: string | null;
   contact_number: string | null;
+  gstn_number: string | null;
 }
 
 interface InvoicePreviewProps {
@@ -66,7 +67,8 @@ const InvoicePreview = ({ invoice, template = 'classic' }: InvoicePreviewProps) 
   const [businessInfo, setBusinessInfo] = useState<BusinessInfo>({
     business_name: null,
     business_address: null,
-    contact_number: null
+    contact_number: null,
+    gstn_number: null
   });
 
   useEffect(() => {
@@ -76,7 +78,7 @@ const InvoicePreview = ({ invoice, template = 'classic' }: InvoicePreviewProps) 
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('business_name, business_address, contact_number')
+          .select('business_name, business_address, contact_number, gstn_number')
           .eq('id', user.id)
           .maybeSingle();
           
@@ -86,7 +88,8 @@ const InvoicePreview = ({ invoice, template = 'classic' }: InvoicePreviewProps) 
           setBusinessInfo({
             business_name: data.business_name,
             business_address: data.business_address,
-            contact_number: data.contact_number
+            contact_number: data.contact_number,
+            gstn_number: data.gstn_number
           });
         }
       } catch (error) {
