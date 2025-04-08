@@ -16,7 +16,6 @@ export type Database = {
           contact_number: string | null
           created_at: string
           first_name: string | null
-          gstn_number: string | null
           id: string
           last_name: string | null
           updated_at: string
@@ -27,7 +26,6 @@ export type Database = {
           contact_number?: string | null
           created_at?: string
           first_name?: string | null
-          gstn_number?: string | null
           id: string
           last_name?: string | null
           updated_at?: string
@@ -38,7 +36,6 @@ export type Database = {
           contact_number?: string | null
           created_at?: string
           first_name?: string | null
-          gstn_number?: string | null
           id?: string
           last_name?: string | null
           updated_at?: string
