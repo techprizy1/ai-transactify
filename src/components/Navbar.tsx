@@ -94,9 +94,13 @@ const Navbar = () => {
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/settings')}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <div className="px-2 py-1.5">
-                    <ThemeToggle variant="switch" />
+                    <ThemeToggle variant="menuitem" />
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut}>

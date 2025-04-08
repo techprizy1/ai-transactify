@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,6 +21,7 @@ import ExpenseReport from "./pages/ExpenseReport";
 import PLAccount from "./pages/PLAccount";
 import BalanceSheet from "./pages/BalanceSheet";
 import FinancialAnalysis from "./pages/FinancialAnalysis";
+import Settings from "./pages/Settings";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/AppSidebar";
 
@@ -138,6 +140,18 @@ const App = () => (
                     <div className="flex w-full min-h-screen">
                       <AppSidebar />
                       <FinancialAnalysis />
+                    </div>
+                  </SidebarProvider>
+                </ProtectedRoute>
+              } />
+              
+              {/* Settings route */}
+              <Route path="/settings" element={
+                <ProtectedRoute>
+                  <SidebarProvider>
+                    <div className="flex w-full min-h-screen">
+                      <AppSidebar />
+                      <Settings />
                     </div>
                   </SidebarProvider>
                 </ProtectedRoute>
