@@ -30,6 +30,7 @@ interface BusinessInfo {
   business_name: string | null;
   business_address: string | null;
   contact_number: string | null;
+  gstn_number: string | null;
 }
 
 interface InvoiceData {
@@ -58,7 +59,8 @@ const Invoice = () => {
   const [businessInfo, setBusinessInfo] = useState<BusinessInfo>({
     business_name: null,
     business_address: null,
-    contact_number: null
+    contact_number: null,
+    gstn_number: null
   });
   
   useEffect(() => {
@@ -68,7 +70,7 @@ const Invoice = () => {
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('business_name, business_address, contact_number')
+          .select('business_name, business_address, contact_number, gstn_number')
           .eq('id', user.id)
           .maybeSingle();
           
@@ -78,7 +80,8 @@ const Invoice = () => {
           setBusinessInfo({
             business_name: data.business_name,
             business_address: data.business_address,
-            contact_number: data.contact_number
+            contact_number: data.contact_number,
+            gstn_number: data.gstn_number
           });
         }
       } catch (error) {
@@ -167,7 +170,7 @@ const Invoice = () => {
               <div className="mb-8 p-4 border border-yellow-200 bg-yellow-50 rounded-md">
                 <p className="text-yellow-800 font-medium">Business information incomplete</p>
                 <p className="text-sm text-yellow-700 mt-1">
-                  Add your business name, address, and contact number in your profile to display them on invoices.
+                  Add your business name, address, contact number, and GSTN number in your profile to display them on invoices.
                 </p>
                 <Button 
                   variant="outline" 

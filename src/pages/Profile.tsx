@@ -18,6 +18,7 @@ interface Profile {
   business_name: string | null;
   business_address: string | null;
   contact_number: string | null;
+  gstn_number: string | null;
 }
 
 const Profile = () => {
@@ -32,6 +33,7 @@ const Profile = () => {
     business_name: '',
     business_address: '',
     contact_number: '',
+    gstn_number: '',
   });
 
   useEffect(() => {
@@ -56,6 +58,7 @@ const Profile = () => {
             business_name: data.business_name || '',
             business_address: data.business_address || '',
             contact_number: data.contact_number || '',
+            gstn_number: data.gstn_number || '',
           });
         }
       } catch (error: any) {
@@ -86,6 +89,7 @@ const Profile = () => {
           business_name: profile.business_name,
           business_address: profile.business_address,
           contact_number: profile.contact_number,
+          gstn_number: profile.gstn_number,
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id);
@@ -186,6 +190,19 @@ const Profile = () => {
                           onChange={(e) => setProfile({ ...profile, business_name: e.target.value })}
                           placeholder="Enter your business name"
                         />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="gstnNumber">GSTN Number</Label>
+                        <Input
+                          id="gstnNumber"
+                          value={profile.gstn_number || ''}
+                          onChange={(e) => setProfile({ ...profile, gstn_number: e.target.value })}
+                          placeholder="Enter your GSTN number"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Your GSTN will appear on invoices under your business name
+                        </p>
                       </div>
                       
                       <div className="space-y-2">

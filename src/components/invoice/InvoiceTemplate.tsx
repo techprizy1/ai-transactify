@@ -13,6 +13,7 @@ interface InvoiceTemplateProps {
   invoiceDate: Date;
   recipient?: string;
   recipientAddress?: string;
+  gstnNumber?: string;
 }
 
 const InvoiceTemplate = ({
@@ -24,6 +25,7 @@ const InvoiceTemplate = ({
   invoiceDate,
   recipient,
   recipientAddress,
+  gstnNumber,
 }: InvoiceTemplateProps) => {
   // Calculate financial summary
   const incomeTransactions = transactions.filter(t => t.type === 'income' || t.type === 'sale');
@@ -39,6 +41,7 @@ const InvoiceTemplate = ({
       <div className="invoice-header">
         <div className="invoice-company">
           <h1>{businessName}</h1>
+          {gstnNumber && <p className="gstn-number">GSTN: {gstnNumber}</p>}
           <p>{businessAddress}</p>
           <p>Contact: {contactNumber}</p>
         </div>
