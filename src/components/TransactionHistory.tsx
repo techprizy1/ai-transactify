@@ -13,13 +13,15 @@ interface TransactionHistoryProps {
   title?: string;
   filterTypes?: TransactionType[];
   fetchTransactions?: boolean;
+  onTransactionUpdated?: () => void;
 }
 
 const TransactionHistory = ({ 
   transactions: initialTransactions, 
   title = "Transaction History",
   filterTypes,
-  fetchTransactions = false
+  fetchTransactions = false,
+  onTransactionUpdated
 }: TransactionHistoryProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
@@ -66,6 +68,10 @@ const TransactionHistory = ({
   // Handle transaction updates
   const handleTransactionUpdated = () => {
     fetchTransactionData();
+    // Call the parent component's onTransactionUpdated function if it exists
+    if (onTransactionUpdated) {
+      onTransactionUpdated();
+    }
   };
   
   // Filter by search term
