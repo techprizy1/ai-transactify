@@ -26,42 +26,47 @@ const TransactionHistory = ({
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   
-  useEffect(() => {
+  const fetchTransactionData = async () => {
     if (!fetchTransactions) {
       setTransactions(initialTransactions);
       return;
     }
     
-    const getTransactions = async () => {
-      setLoading(true);
-      try {
-        let query = supabase.from('transactions').select('*');
-        
-        if (filterTypes && filterTypes.length > 0) {
-          query = query.in('type', filterTypes);
-        }
-        
-        const { data, error } = await query.order('created_at', { ascending: false });
-        
-        if (error) {
-          throw error;
-        }
-        
-        setTransactions(data as Transaction[]);
-      } catch (error) {
-        console.error('Error fetching transactions:', error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch transactions",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
+    setLoading(true);
+    try {
+      let query = supabase.from('transactions').select('*');
+      
+      if (filterTypes && filterTypes.length > 0) {
+        query = query.in('type', filterTypes);
       }
-    };
-    
-    getTransactions();
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
+      
+      if (error) {
+        throw error;
+      }
+      
+      setTransactions(data as Transaction[]);
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch transactions",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTransactionData();
   }, [fetchTransactions, filterTypes, initialTransactions, toast]);
+  
+  // Handle transaction updates
+  const handleTransactionUpdated = () => {
+    fetchTransactionData();
+  };
   
   // Filter by search term
   const filteredTransactions = transactions.filter((transaction) => {
@@ -99,7 +104,11 @@ const TransactionHistory = ({
       ) : filteredTransactions.length > 0 ? (
         <div className="space-y-3">
           {filteredTransactions.map((transaction) => (
-            <TransactionCard key={transaction.id} transaction={transaction} />
+            <TransactionCard 
+              key={transaction.id} 
+              transaction={transaction} 
+              onTransactionUpdated={handleTransactionUpdated} 
+            />
           ))}
         </div>
       ) : (

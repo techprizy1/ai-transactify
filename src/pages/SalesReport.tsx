@@ -22,32 +22,32 @@ const SalesReport = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   
-  useEffect(() => {
-    const fetchSalesTransactions = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('transactions')
-          .select('*')
-          .in('type', ['income', 'sale'])
-          .order('created_at', { ascending: false });
-          
-        if (error) {
-          throw error;
-        }
+  const fetchSalesTransactions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .in('type', ['income', 'sale'])
+        .order('created_at', { ascending: false });
         
-        setTransactions(data as Transaction[]);
-      } catch (error) {
-        console.error('Failed to fetch sales transactions:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load sales data",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
+      if (error) {
+        throw error;
       }
-    };
-    
+      
+      setTransactions(data as Transaction[]);
+    } catch (error) {
+      console.error('Failed to fetch sales transactions:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load sales data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  useEffect(() => {
     fetchSalesTransactions();
   }, [toast]);
   
@@ -112,6 +112,7 @@ const SalesReport = () => {
               title="Sales Transactions" 
               filterTypes={['income', 'sale']}
               fetchTransactions={false}
+              onTransactionUpdated={fetchSalesTransactions}
             />
           </div>
         ) : (

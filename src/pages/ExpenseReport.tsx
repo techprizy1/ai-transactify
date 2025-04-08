@@ -22,32 +22,32 @@ const ExpenseReport = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   
-  useEffect(() => {
-    const fetchExpenseTransactions = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('transactions')
-          .select('*')
-          .eq('type', 'expense')
-          .order('created_at', { ascending: false });
-          
-        if (error) {
-          throw error;
-        }
+  const fetchExpenseTransactions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('type', 'expense')
+        .order('created_at', { ascending: false });
         
-        setTransactions(data as Transaction[]);
-      } catch (error) {
-        console.error('Failed to fetch expense transactions:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load expense data",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
+      if (error) {
+        throw error;
       }
-    };
-    
+      
+      setTransactions(data as Transaction[]);
+    } catch (error) {
+      console.error('Failed to fetch expense transactions:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load expense data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  useEffect(() => {
     fetchExpenseTransactions();
   }, [toast]);
   
@@ -112,6 +112,7 @@ const ExpenseReport = () => {
               title="Expense Transactions" 
               filterTypes={['expense']}
               fetchTransactions={false}
+              onTransactionUpdated={fetchExpenseTransactions}
             />
           </div>
         ) : (

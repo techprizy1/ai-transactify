@@ -15,29 +15,29 @@ const Transactions = () => {
   const { user, checkTransactionLimit } = useAuth();
   
   // Load transactions from database on component mount
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      if (!user) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('transactions')
-          .select('*')
-          .order('created_at', { ascending: false });
-          
-        if (error) {
-          throw error;
-        }
-        
-        setTransactions(data as Transaction[]);
-      } catch (error) {
-        console.error('Failed to fetch transactions:', error);
-        toast.error('Failed to load transactions');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchTransactions = async () => {
+    if (!user) return;
     
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (error) {
+        throw error;
+      }
+      
+      setTransactions(data as Transaction[]);
+    } catch (error) {
+      console.error('Failed to fetch transactions:', error);
+      toast.error('Failed to load transactions');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  useEffect(() => {
     fetchTransactions();
   }, [user]);
   
@@ -83,16 +83,7 @@ const Transactions = () => {
       }
       
       // Refresh the transactions list
-      const { data, error: fetchError } = await supabase
-        .from('transactions')
-        .select('*')
-        .order('created_at', { ascending: false });
-        
-      if (fetchError) {
-        throw fetchError;
-      }
-      
-      setTransactions(data as Transaction[]);
+      fetchTransactions();
       toast.success('Transaction added successfully');
     } catch (error) {
       console.error('Error adding transaction:', error);
@@ -145,7 +136,8 @@ const Transactions = () => {
               <div>
                 <TransactionHistory 
                   transactions={transactions} 
-                  fetchTransactions={true}
+                  fetchTransactions={false}
+                  onTransactionUpdated={fetchTransactions}
                 />
               </div>
             </div>
