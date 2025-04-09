@@ -51,14 +51,17 @@ const Profile = () => {
         if (error) throw error;
 
         if (data) {
+          // Use type assertion to handle the data safely
+          const profileData = data as Profile;
+          
           setProfile({
-            id: data.id,
-            first_name: data.first_name,
-            last_name: data.last_name,
-            business_name: data.business_name || '',
-            business_address: data.business_address || '',
-            contact_number: data.contact_number || '',
-            gstn_number: data.gstn_number || '',
+            id: profileData.id,
+            first_name: profileData.first_name,
+            last_name: profileData.last_name,
+            business_name: profileData.business_name || '',
+            business_address: profileData.business_address || '',
+            contact_number: profileData.contact_number || '',
+            gstn_number: profileData.gstn_number || '',
           });
         }
       } catch (error: any) {

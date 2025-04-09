@@ -1,3 +1,4 @@
+
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -87,11 +88,19 @@ const InvoicePreview = ({ invoice, template = 'classic' }: InvoicePreviewProps) 
         }
         
         if (data) {
+          // Use type assertion to handle the data safely
+          const profileData = data as {
+            business_name: string | null;
+            business_address: string | null;
+            contact_number: string | null;
+            gstn_number: string | null;
+          };
+          
           setBusinessInfo({
-            business_name: data.business_name,
-            business_address: data.business_address,
-            contact_number: data.contact_number,
-            gstn_number: data.gstn_number
+            business_name: profileData.business_name,
+            business_address: profileData.business_address,
+            contact_number: profileData.contact_number,
+            gstn_number: profileData.gstn_number
           });
         }
       } catch (error) {
