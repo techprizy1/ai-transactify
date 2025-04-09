@@ -1,4 +1,3 @@
-
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -569,6 +568,9 @@ const InvoicePreview = ({ invoice, template = 'classic' }: InvoicePreviewProps) 
                 <div className="text-sm text-gray-500 mt-1">
                   <p>{businessInfo.business_address || 'Business Address Not Set'}</p>
                   <p>{businessInfo.contact_number || 'Contact Number Not Set'}</p>
+                  {businessInfo.gstn_number && (
+                    <p>GSTIN: {businessInfo.gstn_number}</p>
+                  )}
                 </div>
               </div>
             </div>

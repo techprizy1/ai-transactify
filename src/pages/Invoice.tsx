@@ -118,7 +118,10 @@ const Invoice = () => {
       const { data, error } = await supabase.functions.invoke('generate-invoice', {
         body: { 
           prompt,
-          businessInfo
+          businessInfo: {
+            ...businessInfo,
+            gstn_number: businessInfo.gstn_number || null
+          }
         },
       });
 
