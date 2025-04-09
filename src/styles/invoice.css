@@ -1,8 +1,10 @@
+
 /* A4 page style for printing */
 .invoice-container {
-  width: 210mm;
+  width: 100%;
+  max-width: 210mm;
   min-height: 297mm;
-  padding: 20mm;
+  padding: 15mm;
   margin: 0 auto;
   background: white;
   box-sizing: border-box;
@@ -10,6 +12,7 @@
   color: #333;
   page-break-after: always;
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  overflow-x: auto;
 }
 
 /* Setting up printing properties */
@@ -34,6 +37,29 @@
     border: none;
     box-shadow: none;
     page-break-after: always;
+    overflow: visible;
+  }
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .invoice-container {
+    padding: 10mm;
+  }
+  
+  .invoice-header {
+    flex-direction: column;
+  }
+  
+  .invoice-details {
+    text-align: left;
+    margin-top: 20px;
+  }
+  
+  .invoice-items th,
+  .invoice-items td {
+    padding: 8px;
+    font-size: 12px;
   }
 }
 
@@ -155,12 +181,14 @@
 /* Invoice items table */
 .invoice-items {
   margin-bottom: 30px;
+  overflow-x: auto;
 }
 
 .invoice-items table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
+  min-width: 500px; /* Ensures table doesn't get too small on mobile */
 }
 
 .invoice-items th {

@@ -7,9 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
-import Navbar from '@/components/Navbar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/AppSidebar';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Profile {
   id: string;
@@ -26,6 +26,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isMobile = useIsMobile();
   const [profile, setProfile] = useState<Profile>({
     id: '',
     first_name: '',
@@ -114,10 +115,10 @@ const Profile = () => {
       <div className="flex w-full min-h-screen">
         <AppSidebar />
         <div className="flex-1 min-h-screen">
-          <main className="container mx-auto max-w-3xl px-4 py-10">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold">Your Profile</h1>
-              <p className="text-muted-foreground mt-2">
+          <main className="container mx-auto max-w-3xl px-4 py-6 md:py-10">
+            <div className="text-center mb-6 md:mb-8">
+              <h1 className="text-2xl md:text-3xl font-bold">Your Profile</h1>
+              <p className="text-sm md:text-base text-muted-foreground mt-2">
                 Update your personal and business information
               </p>
             </div>
@@ -128,7 +129,7 @@ const Profile = () => {
               </Alert>
             )}
             
-            <div className="glass-panel p-6">
+            <div className="glass-panel p-4 md:p-6">
               {loading ? (
                 <div className="animate-pulse space-y-4">
                   <div className="h-4 bg-muted rounded w-1/3"></div>
@@ -140,7 +141,7 @@ const Profile = () => {
               ) : (
                 <form onSubmit={updateProfile} className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-semibold mb-4">Personal Information</h2>
+                    <h2 className="text-lg md:text-xl font-semibold mb-4">Personal Information</h2>
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="email">Email</Label>
@@ -156,31 +157,33 @@ const Profile = () => {
                         </p>
                       </div>
                       
-                      <div className="space-y-2">
-                        <Label htmlFor="firstName">First Name</Label>
-                        <Input
-                          id="firstName"
-                          value={profile.first_name || ''}
-                          onChange={(e) => setProfile({ ...profile, first_name: e.target.value })}
-                          placeholder="Enter your first name"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="lastName">Last Name</Label>
-                        <Input
-                          id="lastName"
-                          value={profile.last_name || ''}
-                          onChange={(e) => setProfile({ ...profile, last_name: e.target.value })}
-                          placeholder="Enter your last name"
-                        />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="firstName">First Name</Label>
+                          <Input
+                            id="firstName"
+                            value={profile.first_name || ''}
+                            onChange={(e) => setProfile({ ...profile, first_name: e.target.value })}
+                            placeholder="Enter your first name"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="lastName">Last Name</Label>
+                          <Input
+                            id="lastName"
+                            value={profile.last_name || ''}
+                            onChange={(e) => setProfile({ ...profile, last_name: e.target.value })}
+                            placeholder="Enter your last name"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
                   
                   <div className="border-t pt-6">
-                    <h2 className="text-xl font-semibold mb-4">Business Information</h2>
-                    <p className="text-sm text-muted-foreground mb-4">
+                    <h2 className="text-lg md:text-xl font-semibold mb-4">Business Information</h2>
+                    <p className="text-xs md:text-sm text-muted-foreground mb-4">
                       This information will appear on your invoices and reports
                     </p>
                     
@@ -230,7 +233,7 @@ const Profile = () => {
                     </div>
                   </div>
                   
-                  <div className="flex justify-end">
+                  <div className="flex justify-end pt-2">
                     <Button type="submit" disabled={updating}>
                       {updating ? 'Updating...' : 'Update Profile'}
                     </Button>

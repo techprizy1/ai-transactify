@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,6 +10,7 @@ import { downloadInvoice, printInvoice } from '@/utils/pdf-utils';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/AppSidebar';
 import { useAuth } from '@/context/AuthContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   Card,
   CardContent,
@@ -57,6 +57,7 @@ const Invoice = () => {
   const [invoiceData, setInvoiceData] = useState<InvoiceData | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<InvoiceTemplateType>('classic');
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [businessInfo, setBusinessInfo] = useState<BusinessInfo>({
     business_name: null,
     business_address: null,
@@ -81,7 +82,6 @@ const Invoice = () => {
         }
         
         if (data) {
-          // Use type assertion to handle the data safely
           const profileData = data as {
             business_name: string | null;
             business_address: string | null;
@@ -170,18 +170,18 @@ const Invoice = () => {
       <div className="flex w-full min-h-screen">
         <AppSidebar />
         <div className="flex-1 min-h-screen">
-          <main className="container mx-auto max-w-6xl px-4 py-10">
-            <div className="text-center mb-12 animate-fade-in">
-              <h1 className="text-3xl font-bold tracking-tight">AI Invoice Generator</h1>
-              <p className="mt-2 text-muted-foreground">
+          <main className="container mx-auto px-4 py-6 md:py-10 max-w-6xl">
+            <div className="text-center mb-8 md:mb-12 animate-fade-in">
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">AI Invoice Generator</h1>
+              <p className="mt-2 text-muted-foreground text-sm md:text-base">
                 Describe your invoice in natural language and our AI will generate it for you
               </p>
             </div>
             
             {isBusinessInfoMissing && (
-              <div className="mb-8 p-4 border border-yellow-200 bg-yellow-50 rounded-md">
-                <p className="text-yellow-800 font-medium">Business information incomplete</p>
-                <p className="text-sm text-yellow-700 mt-1">
+              <div className="mb-6 md:mb-8 p-3 md:p-4 border border-yellow-200 bg-yellow-50 rounded-md">
+                <p className="text-yellow-800 font-medium text-sm md:text-base">Business information incomplete</p>
+                <p className="text-xs md:text-sm text-yellow-700 mt-1">
                   Add your business name, address, contact number, and GSTN number in your profile to display them on invoices.
                 </p>
                 <Button 
@@ -195,8 +195,8 @@ const Invoice = () => {
               </div>
             )}
             
-            <div className="grid lg:grid-cols-2 gap-8 print:hidden">
-              <div className="space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8 print:hidden">
+              <div className="space-y-4 md:space-y-8">
                 <Card className="animate-fade-in">
                   <CardHeader>
                     <CardTitle>Generate Invoice</CardTitle>
@@ -209,10 +209,10 @@ const Invoice = () => {
                       <div className="space-y-2">
                         <Textarea
                           id="invoice-input"
-                          placeholder="Example: Create an invoice for ABC Corp for web design services. Include 3 items: website design for ₹45000, logo design for ₹15000, and SEO setup for ₹25000. The invoice was issued on April 10th and is due in 30 days."
+                          placeholder={isMobile ? "Example: Create an invoice for web design services..." : "Example: Create an invoice for ABC Corp for web design services. Include 3 items: website design for ₹45000, logo design for ₹15000, and SEO setup for ₹25000. The invoice was issued on April 10th and is due in 30 days."}
                           value={prompt}
                           onChange={(e) => setPrompt(e.target.value)}
-                          rows={6}
+                          rows={isMobile ? 4 : 6}
                           className="resize-none transition-all focus-visible:ring-primary/20 focus-visible:ring-offset-0"
                         />
                       </div>
@@ -226,11 +226,11 @@ const Invoice = () => {
                           {isLoading ? (
                             <>
                               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Generating invoice...
+                              <span className="text-sm">Generating...</span>
                             </>
                           ) : (
                             <>
-                              Generate Invoice
+                              <span className="text-sm">Generate Invoice</span>
                               <Send className="ml-2 h-4 w-4" />
                             </>
                           )}
@@ -257,13 +257,13 @@ const Invoice = () => {
                       ].map((example, index) => (
                         <div 
                           key={index} 
-                          className="p-3 bg-muted/50 rounded-md text-sm cursor-pointer hover:bg-muted transition-colors"
+                          className="p-2 md:p-3 bg-muted/50 rounded-md text-xs md:text-sm cursor-pointer hover:bg-muted transition-colors"
                           onClick={() => {
                             setPrompt(example);
                             toast.success('Example copied to input');
                           }}
                         >
-                          {example}
+                          {isMobile ? example.slice(0, 80) + '...' : example}
                         </div>
                       ))}
                     </div>
@@ -299,18 +299,18 @@ const Invoice = () => {
                         </CardDescription>
                       </div>
                       <div className="flex space-x-2">
-                        <Button variant="outline" size="sm" onClick={handlePrint}>
-                          <Printer className="mr-2 h-4 w-4" />
+                        <Button variant="outline" size="sm" onClick={handlePrint} className="text-xs md:text-sm">
+                          <Printer className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
                           Print
                         </Button>
-                        <Button variant="outline" size="sm" onClick={handleDownload}>
-                          <Download className="mr-2 h-4 w-4" />
+                        <Button variant="outline" size="sm" onClick={handleDownload} className="text-xs md:text-sm">
+                          <Download className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
                           Download
                         </Button>
                       </div>
                     </CardHeader>
                     <CardContent className="p-0">
-                      <div className="border-t">
+                      <div className="border-t overflow-x-auto">
                         <InvoicePreview 
                           invoice={invoiceData} 
                           template={selectedTemplate} 
@@ -321,9 +321,9 @@ const Invoice = () => {
                 ) : (
                   <Card className="h-full animate-fade-in">
                     <CardContent className="h-full flex flex-col items-center justify-center text-center p-6">
-                      <FileText className="h-16 w-16 text-muted-foreground/50 mb-4" />
-                      <h3 className="text-lg font-medium mb-2">No Invoice Generated Yet</h3>
-                      <p className="text-muted-foreground max-w-md">
+                      <FileText className="h-12 w-12 md:h-16 md:w-16 text-muted-foreground/50 mb-4" />
+                      <h3 className="text-base md:text-lg font-medium mb-2">No Invoice Generated Yet</h3>
+                      <p className="text-xs md:text-sm text-muted-foreground max-w-md">
                         Enter a description of your invoice in the form and click "Generate Invoice" to create a new invoice using AI.
                       </p>
                     </CardContent>
