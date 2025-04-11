@@ -1,11 +1,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.21.0';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-const supabaseUrl = Deno.env.get('SUPABASE_URL');
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -56,53 +53,16 @@ serve(async (req) => {
     console.log('Processing invoice prompt:', prompt);
     console.log('Business info:', businessInfo);
 
-    // Initialize Supabase client
-    const supabase = createClient(supabaseUrl || '', supabaseServiceKey || '');
-
-    // Get the current invoice sequence number from the database
-    let { data: invoiceCounter, error: counterError } = await supabase
-      .from('invoice_counter')
-      .select('*')
-      .limit(1)
-      .single();
-
-    if (counterError) {
-      // If there's no counter in the database yet, create one starting from 1
-      if (counterError.code === 'PGRST116') {
-        const { data: newCounter, error: insertError } = await supabase
-          .from('invoice_counter')
-          .insert([{ current_value: 1 }])
-          .select();
-        
-        if (insertError) {
-          throw new Error(`Failed to initialize invoice counter: ${insertError.message}`);
-        }
-        
-        invoiceCounter = newCounter?.[0];
-      } else {
-        throw new Error(`Failed to get invoice counter: ${counterError.message}`);
-      }
-    }
-
-    // Format the invoice number with leading zeros (e.g., 001, 002, etc.)
-    const formattedNumber = String(invoiceCounter.current_value).padStart(3, '0');
-    const invoiceNumber = `INV-${formattedNumber}`;
-
-    // Increment the counter for the next invoice
-    const { error: updateError } = await supabase
-      .from('invoice_counter')
-      .update({ current_value: invoiceCounter.current_value + 1 })
-      .eq('id', invoiceCounter.id);
-
-    if (updateError) {
-      throw new Error(`Failed to update invoice counter: ${updateError.message}`);
-    }
+    // Generate a unique invoice number based on timestamp and random string
+    const timestamp = new Date().getTime();
+    const randomString = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const uniqueInvoiceNumber = `INV-${timestamp.toString().slice(-6)}-${randomString}`;
 
     // Enhance the system prompt with business information and include generated invoice number
     let systemPrompt = `You are an AI assistant that helps generate invoice data from user descriptions.
             Extract information and return ONLY a JSON object with the following structure:
             {
-              "invoiceNumber": "${invoiceNumber}",
+              "invoiceNumber": "${uniqueInvoiceNumber}",
               "date": "string in YYYY-MM-DD format (use today if not specified)",
               "dueDate": "string in YYYY-MM-DD format (default to 15 days from date if not specified)",
               "billTo": {
@@ -123,7 +83,7 @@ serve(async (req) => {
               "taxAmount": number (subtotal * taxRate / 100)",
               "total": number (subtotal + taxAmount)"
             }
-            Fill in any missing details with reasonable defaults. Always use the exact invoice number provided: ${invoiceNumber}. Do not include any explanations in your response, only the JSON object.`;
+            Fill in any missing details with reasonable defaults. Always use the exact invoice number provided: ${uniqueInvoiceNumber}. Do not include any explanations in your response, only the JSON object.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -153,8 +113,8 @@ serve(async (req) => {
       const jsonStr = jsonMatch ? jsonMatch[0] : content;
       invoiceData = JSON.parse(jsonStr);
       
-      // Ensure the invoice number is the one we generated
-      invoiceData.invoiceNumber = invoiceNumber;
+      // Ensure the invoice number is the unique one we generated
+      invoiceData.invoiceNumber = uniqueInvoiceNumber;
     } catch (parseError) {
       console.error('Error parsing OpenAI response:', parseError);
       return new Response(JSON.stringify({ 
