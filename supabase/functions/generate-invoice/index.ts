@@ -53,11 +53,16 @@ serve(async (req) => {
     console.log('Processing invoice prompt:', prompt);
     console.log('Business info:', businessInfo);
 
-    // Enhance the system prompt with business information if available
+    // Generate a unique invoice number based on timestamp and random string
+    const timestamp = new Date().getTime();
+    const randomString = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const uniqueInvoiceNumber = `INV-${timestamp.toString().slice(-6)}-${randomString}`;
+
+    // Enhance the system prompt with business information and include generated invoice number
     let systemPrompt = `You are an AI assistant that helps generate invoice data from user descriptions.
             Extract information and return ONLY a JSON object with the following structure:
             {
-              "invoiceNumber": "string (auto-generate if not specified)",
+              "invoiceNumber": "${uniqueInvoiceNumber}",
               "date": "string in YYYY-MM-DD format (use today if not specified)",
               "dueDate": "string in YYYY-MM-DD format (default to 15 days from date if not specified)",
               "billTo": {
@@ -78,7 +83,7 @@ serve(async (req) => {
               "taxAmount": number (subtotal * taxRate / 100)",
               "total": number (subtotal + taxAmount)"
             }
-            Fill in any missing details with reasonable defaults. Do not include any explanations in your response, only the JSON object.`;
+            Fill in any missing details with reasonable defaults. Always use the exact invoice number provided: ${uniqueInvoiceNumber}. Do not include any explanations in your response, only the JSON object.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -107,6 +112,9 @@ serve(async (req) => {
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       const jsonStr = jsonMatch ? jsonMatch[0] : content;
       invoiceData = JSON.parse(jsonStr);
+      
+      // Ensure the invoice number is the unique one we generated
+      invoiceData.invoiceNumber = uniqueInvoiceNumber;
     } catch (parseError) {
       console.error('Error parsing OpenAI response:', parseError);
       return new Response(JSON.stringify({ 
