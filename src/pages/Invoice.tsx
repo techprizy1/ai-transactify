@@ -19,7 +19,6 @@ import {
   CardDescription,
   CardFooter 
 } from '@/components/ui/card';
-import { BusinessInfo, InvoiceData } from '@/lib/types';
 
 interface InvoiceItem {
   description: string;
