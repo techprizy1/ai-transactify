@@ -24,4 +24,36 @@ export interface BusinessProfile {
   business_name: string | null;
   business_address: string | null;
   contact_number: string | null;
+  gstn_number?: string | null;
+}
+
+export interface InvoiceItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+}
+
+export interface BusinessInfo {
+  business_name: string | null;
+  business_address: string | null;
+  contact_number: string | null;
+  gstn_number: string | null;
+}
+
+export interface InvoiceData {
+  invoiceNumber: string;
+  date: string;
+  dueDate: string;
+  billTo: {
+    name: string;
+    address: string;
+    email?: string;
+  };
+  items: InvoiceItem[];
+  subtotal: number;
+  taxRate: number;
+  taxAmount: number;
+  total: number;
+  businessInfo?: BusinessInfo;
 }
