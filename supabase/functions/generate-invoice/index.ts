@@ -1,8 +1,11 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -53,10 +56,40 @@ serve(async (req) => {
     console.log('Processing invoice prompt:', prompt);
     console.log('Business info:', businessInfo);
 
-    // Generate a unique invoice number based on timestamp and random string
-    const timestamp = new Date().getTime();
-    const randomString = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const uniqueInvoiceNumber = `INV-${timestamp.toString().slice(-6)}-${randomString}`;
+    // Initialize Supabase client
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Get the next invoice number
+    const { data: counterData, error: counterError } = await supabase
+      .from('invoice_counter')
+      .select('counter')
+      .single();
+
+    let nextCounter = 1;
+    if (counterError) {
+      if (counterError.code === 'PGRST116') {
+        // Table doesn't exist, create it
+        await supabase.rpc('create_invoice_counter');
+        
+        // Insert initial counter
+        await supabase
+          .from('invoice_counter')
+          .insert({ counter: 1 });
+      } else {
+        console.error('Error getting invoice counter:', counterError);
+      }
+    } else if (counterData) {
+      nextCounter = counterData.counter;
+      
+      // Update the counter for the next invoice
+      await supabase
+        .from('invoice_counter')
+        .update({ counter: nextCounter + 1 })
+        .eq('id', 1);
+    }
+
+    // Format the invoice number with leading zeros
+    const uniqueInvoiceNumber = `INV-${String(nextCounter).padStart(3, '0')}`;
 
     // Enhance the system prompt with business information and include generated invoice number
     let systemPrompt = `You are an AI assistant that helps generate invoice data from user descriptions.
@@ -126,10 +159,12 @@ serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({
+    const finalInvoiceData = {
       ...invoiceData,
       businessInfo
-    }), {
+    };
+
+    return new Response(JSON.stringify(finalInvoiceData), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {

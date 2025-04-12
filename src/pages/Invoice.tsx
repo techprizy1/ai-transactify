@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,13 +12,18 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/AppSidebar';
 import { useAuth } from '@/context/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import InvoiceHistory from '@/components/InvoiceHistory';
 import { 
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-  CardFooter 
+  CardFooter,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger
 } from '@/components/ui/card';
 
 interface InvoiceItem {
@@ -58,6 +64,7 @@ const Invoice = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<InvoiceTemplateType>('classic');
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const [activeTab, setActiveTab] = useState<string>("generate");
   const [businessInfo, setBusinessInfo] = useState<BusinessInfo>({
     business_name: null,
     business_address: null,
@@ -139,6 +146,22 @@ const Invoice = () => {
       
       setInvoiceData(data);
       toast.success('Invoice generated successfully');
+      
+      // Save the invoice to the database
+      try {
+        const { error: saveError } = await supabase.from('invoices').insert({
+          invoice_number: data.invoiceNumber,
+          data: data,
+          user_id: user?.id
+        });
+        
+        if (saveError) {
+          console.error('Error saving invoice:', saveError);
+          toast.error('Failed to save invoice history');
+        }
+      } catch (saveError) {
+        console.error('Error saving invoice to history:', saveError);
+      }
     } catch (error) {
       console.error('Error generating invoice:', error);
       toast.error('Failed to generate invoice');
@@ -198,142 +221,155 @@ const Invoice = () => {
               </div>
             )}
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8 print:hidden">
-              <div className="space-y-4 md:space-y-8">
-                <Card className="animate-fade-in">
-                  <CardHeader>
-                    <CardTitle>Generate Invoice</CardTitle>
-                    <CardDescription>
-                      Describe your invoice in natural language
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <form onSubmit={handleGenerateInvoice} className="space-y-4">
-                      <div className="space-y-2">
-                        <Textarea
-                          id="invoice-input"
-                          placeholder={isMobile ? "Example: Create an invoice for web design services..." : "Example: Create an invoice for ABC Corp for web design services. Include 3 items: website design for ₹45000, logo design for ₹15000, and SEO setup for ₹25000. The invoice was issued on April 10th and is due in 30 days."}
-                          value={prompt}
-                          onChange={(e) => setPrompt(e.target.value)}
-                          rows={isMobile ? 4 : 6}
-                          className="resize-none transition-all focus-visible:ring-primary/20 focus-visible:ring-offset-0"
-                        />
-                      </div>
-                      
-                      <div className="pt-2">
-                        <Button 
-                          type="submit" 
-                          className="w-full relative overflow-hidden btn-hover-effect" 
-                          disabled={isLoading || !prompt.trim()}
-                        >
-                          {isLoading ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              <span className="text-sm">Generating...</span>
-                            </>
-                          ) : (
-                            <>
-                              <span className="text-sm">Generate Invoice</span>
-                              <Send className="ml-2 h-4 w-4" />
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </form>
-                  </CardContent>
-                </Card>
-                
-                <Card className="animate-fade-in">
-                  <CardHeader>
-                    <CardTitle>Example prompts</CardTitle>
-                    <CardDescription>
-                      Click on any example to use it
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {[
-                        "Create an invoice for ABC Corp for web design services. Include 3 items: website design for ₹45000, logo design for ₹15000, and SEO setup for ₹25000. The invoice was issued today and is due in 30 days.",
-                        "Generate an invoice for John Doe for consulting services at ₹5000 per hour for 10 hours with a tax rate of 18%.",
-                        "Invoice to Acme Inc. for office supplies: 5 laptops at ₹50000 each, 10 monitors at ₹15000 each, and 5 keyboards at ₹1500 each. Apply a 12% tax rate.",
-                        "Make an invoice for XYZ Ltd for software development work done in April. 80 hours of coding at ₹2000/hr and 20 hours of testing at ₹1500/hr. Invoice number INV-2023-42."
-                      ].map((example, index) => (
-                        <div 
-                          key={index} 
-                          className="p-2 md:p-3 bg-muted/50 rounded-md text-xs md:text-sm cursor-pointer hover:bg-muted transition-colors"
-                          onClick={() => {
-                            setPrompt(example);
-                            toast.success('Example copied to input');
-                          }}
-                        >
-                          {isMobile ? example.slice(0, 80) + '...' : example}
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                {invoiceData && (
-                  <Card className="animate-fade-in">
-                    <CardHeader>
-                      <CardTitle>Invoice Settings</CardTitle>
-                      <CardDescription>
-                        Customize your invoice appearance
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <InvoiceTemplates 
-                        selectedTemplate={selectedTemplate}
-                        onSelectTemplate={setSelectedTemplate}
-                      />
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
+            <Tabs defaultValue="generate" className="w-full" onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="generate">Generate Invoice</TabsTrigger>
+                <TabsTrigger value="history">Invoice History</TabsTrigger>
+              </TabsList>
               
-              <div>
-                {invoiceData ? (
-                  <Card className="animate-fade-in">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                      <div>
-                        <CardTitle>Invoice Preview</CardTitle>
+              <TabsContent value="generate" className="mt-0">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8 print:hidden">
+                  <div className="space-y-4 md:space-y-8">
+                    <Card className="animate-fade-in">
+                      <CardHeader>
+                        <CardTitle>Generate Invoice</CardTitle>
                         <CardDescription>
-                          Invoice #{invoiceData.invoiceNumber}
+                          Describe your invoice in natural language
                         </CardDescription>
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button variant="outline" size="sm" onClick={handlePrint} className="text-xs md:text-sm">
-                          <Printer className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
-                          Print
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={handleDownload} className="text-xs md:text-sm">
-                          <Download className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
-                          Download
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                      <div className="border-t overflow-x-auto">
-                        <InvoicePreview 
-                          invoice={invoiceData} 
-                          template={selectedTemplate} 
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <Card className="h-full animate-fade-in">
-                    <CardContent className="h-full flex flex-col items-center justify-center text-center p-6">
-                      <FileText className="h-12 w-12 md:h-16 md:w-16 text-muted-foreground/50 mb-4" />
-                      <h3 className="text-base md:text-lg font-medium mb-2">No Invoice Generated Yet</h3>
-                      <p className="text-xs md:text-sm text-muted-foreground max-w-md">
-                        Enter a description of your invoice in the form and click "Generate Invoice" to create a new invoice using AI.
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            </div>
+                      </CardHeader>
+                      <CardContent>
+                        <form onSubmit={handleGenerateInvoice} className="space-y-4">
+                          <div className="space-y-2">
+                            <Textarea
+                              id="invoice-input"
+                              placeholder={isMobile ? "Example: Create an invoice for web design services..." : "Example: Create an invoice for ABC Corp for web design services. Include 3 items: website design for ₹45000, logo design for ₹15000, and SEO setup for ₹25000. The invoice was issued on April 10th and is due in 30 days."}
+                              value={prompt}
+                              onChange={(e) => setPrompt(e.target.value)}
+                              rows={isMobile ? 4 : 6}
+                              className="resize-none transition-all focus-visible:ring-primary/20 focus-visible:ring-offset-0"
+                            />
+                          </div>
+                          
+                          <div className="pt-2">
+                            <Button 
+                              type="submit" 
+                              className="w-full relative overflow-hidden btn-hover-effect" 
+                              disabled={isLoading || !prompt.trim()}
+                            >
+                              {isLoading ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  <span className="text-sm">Generating...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <span className="text-sm">Generate Invoice</span>
+                                  <Send className="ml-2 h-4 w-4" />
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </form>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="animate-fade-in">
+                      <CardHeader>
+                        <CardTitle>Example prompts</CardTitle>
+                        <CardDescription>
+                          Click on any example to use it
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {[
+                            "Create an invoice for ABC Corp for web design services. Include 3 items: website design for ₹45000, logo design for ₹15000, and SEO setup for ₹25000. The invoice was issued today and is due in 30 days.",
+                            "Generate an invoice for John Doe for consulting services at ₹5000 per hour for 10 hours with a tax rate of 18%.",
+                            "Invoice to Acme Inc. for office supplies: 5 laptops at ₹50000 each, 10 monitors at ₹15000 each, and 5 keyboards at ₹1500 each. Apply a 12% tax rate.",
+                            "Make an invoice for XYZ Ltd for software development work done in April. 80 hours of coding at ₹2000/hr and 20 hours of testing at ₹1500/hr. Invoice number INV-2023-42."
+                          ].map((example, index) => (
+                            <div 
+                              key={index} 
+                              className="p-2 md:p-3 bg-muted/50 rounded-md text-xs md:text-sm cursor-pointer hover:bg-muted transition-colors"
+                              onClick={() => {
+                                setPrompt(example);
+                                toast.success('Example copied to input');
+                              }}
+                            >
+                              {isMobile ? example.slice(0, 80) + '...' : example}
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    {invoiceData && (
+                      <Card className="animate-fade-in">
+                        <CardHeader>
+                          <CardTitle>Invoice Settings</CardTitle>
+                          <CardDescription>
+                            Customize your invoice appearance
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <InvoiceTemplates 
+                            selectedTemplate={selectedTemplate}
+                            onSelectTemplate={setSelectedTemplate}
+                          />
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                  
+                  <div>
+                    {invoiceData ? (
+                      <Card className="animate-fade-in">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                          <div>
+                            <CardTitle>Invoice Preview</CardTitle>
+                            <CardDescription>
+                              Invoice #{invoiceData.invoiceNumber}
+                            </CardDescription>
+                          </div>
+                          <div className="flex space-x-2">
+                            <Button variant="outline" size="sm" onClick={handlePrint} className="text-xs md:text-sm">
+                              <Printer className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
+                              Print
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={handleDownload} className="text-xs md:text-sm">
+                              <Download className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
+                              Download
+                            </Button>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                          <div className="border-t overflow-x-auto">
+                            <InvoicePreview 
+                              invoice={invoiceData} 
+                              template={selectedTemplate} 
+                            />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <Card className="h-full animate-fade-in">
+                        <CardContent className="h-full flex flex-col items-center justify-center text-center p-6">
+                          <FileText className="h-12 w-12 md:h-16 md:w-16 text-muted-foreground/50 mb-4" />
+                          <h3 className="text-base md:text-lg font-medium mb-2">No Invoice Generated Yet</h3>
+                          <p className="text-xs md:text-sm text-muted-foreground max-w-md">
+                            Enter a description of your invoice in the form and click "Generate Invoice" to create a new invoice using AI.
+                          </p>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="history" className="mt-0">
+                <InvoiceHistory />
+              </TabsContent>
+            </Tabs>
             
             <div className="hidden print:block">
               {invoiceData && <InvoicePreview invoice={invoiceData} template={selectedTemplate} />}
