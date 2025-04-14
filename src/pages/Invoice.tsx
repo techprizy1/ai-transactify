@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,13 +12,18 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/AppSidebar';
 import { useAuth } from '@/context/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import InvoiceHistory from '@/components/InvoiceHistory';
 import { 
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-  CardFooter 
+  CardFooter,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger
 } from '@/components/ui/card';
 import Loader from '@/components/Loader';
 
@@ -59,6 +65,7 @@ const Invoice = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<InvoiceTemplateType>('classic');
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const [activeTab, setActiveTab] = useState<string>("generate");
   const [businessInfo, setBusinessInfo] = useState<BusinessInfo>({
     business_name: null,
     business_address: null,
@@ -140,6 +147,22 @@ const Invoice = () => {
       
       setInvoiceData(data);
       toast.success('Invoice generated successfully');
+      
+      // Save the invoice to the database
+      try {
+        const { error: saveError } = await supabase.from('invoices').insert({
+          invoice_number: data.invoiceNumber,
+          data: data,
+          user_id: user?.id
+        });
+        
+        if (saveError) {
+          console.error('Error saving invoice:', saveError);
+          toast.error('Failed to save invoice history');
+        }
+      } catch (saveError) {
+        console.error('Error saving invoice to history:', saveError);
+      }
     } catch (error) {
       console.error('Error generating invoice:', error);
       toast.error('Failed to generate invoice');
@@ -229,7 +252,7 @@ const Invoice = () => {
                         >
                           {isLoading ? (
                             <>
-                              <Loader size="sm" color="text-green-500" />
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                               <span className="text-sm">Generating...</span>
                             </>
                           ) : (
