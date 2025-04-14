@@ -19,6 +19,7 @@ import {
   CardDescription,
   CardFooter 
 } from '@/components/ui/card';
+import Loader from '@/components/Loader';
 
 interface InvoiceItem {
   description: string;
@@ -228,7 +229,7 @@ const Invoice = () => {
                         >
                           {isLoading ? (
                             <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              <Loader size="sm" color="text-green-500" />
                               <span className="text-sm">Generating...</span>
                             </>
                           ) : (
