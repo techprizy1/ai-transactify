@@ -1,4 +1,3 @@
-
 export interface Transaction {
   id: string;
   description: string;
@@ -63,4 +62,21 @@ export interface StoredInvoice {
   data: InvoiceData;
   created_at: string;
   user_id: string;
+}
+
+export interface PurchaseOrderItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+}
+
+export interface PurchaseOrder {
+  id: string;
+  supplier: string;
+  deliveryDate: string;
+  items: PurchaseOrderItem[];
+  totalAmount: number;
+  status: 'pending' | 'completed' | 'cancelled';
+  createdAt: string;
 }

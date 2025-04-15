@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,12 +18,14 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  CardFooter,
+  CardFooter
+} from '@/components/ui/card';
+import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger
-} from '@/components/ui/card';
+} from '@/components/ui/tabs';
 import Loader from '@/components/Loader';
 
 interface InvoiceItem {
@@ -150,11 +151,13 @@ const Invoice = () => {
       
       // Save the invoice to the database
       try {
-        const { error: saveError } = await supabase.from('invoices').insert({
-          invoice_number: data.invoiceNumber,
-          data: data,
-          user_id: user?.id
-        });
+        const { error: saveError } = await supabase
+          .from('invoices')
+          .insert({
+            invoice_number: data.invoiceNumber,
+            data: data,
+            user_id: user?.id
+          });
         
         if (saveError) {
           console.error('Error saving invoice:', saveError);
