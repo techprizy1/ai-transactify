@@ -299,55 +299,55 @@ const Invoice = () => {
                     </div>
                   </CardContent>
                 </Card>
-                
-                {invoiceData && (
-                  <Card className="animate-fade-in">
-                    <CardHeader>
-                      <CardTitle>Invoice Settings</CardTitle>
-                      <CardDescription>
-                        Customize your invoice appearance
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <InvoiceTemplates 
-                        selectedTemplate={selectedTemplate}
-                        onSelectTemplate={setSelectedTemplate}
-                      />
-                    </CardContent>
-                  </Card>
-                )}
               </div>
               
               <div>
                 {invoiceData ? (
-                  <Card className="animate-fade-in">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                      <div>
-                        <CardTitle>Invoice Preview</CardTitle>
+                  <>
+                    <Card className="animate-fade-in mb-4">
+                      <CardHeader>
+                        <CardTitle>Invoice Settings</CardTitle>
                         <CardDescription>
-                          Invoice #{invoiceData.invoiceNumber}
+                          Customize your invoice appearance
                         </CardDescription>
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button variant="outline" size="sm" onClick={handlePrint} className="text-xs md:text-sm">
-                          <Printer className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
-                          Print
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={handleDownload} className="text-xs md:text-sm">
-                          <Download className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
-                          Download
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                      <div className="border-t overflow-x-auto">
-                        <InvoicePreview 
-                          invoice={invoiceData} 
-                          template={selectedTemplate} 
+                      </CardHeader>
+                      <CardContent>
+                        <InvoiceTemplates 
+                          selectedTemplate={selectedTemplate}
+                          onSelectTemplate={setSelectedTemplate}
                         />
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="animate-fade-in">
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                        <div>
+                          <CardTitle>Invoice Preview</CardTitle>
+                          <CardDescription>
+                            Invoice #{invoiceData.invoiceNumber}
+                          </CardDescription>
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button variant="outline" size="sm" onClick={handlePrint} className="text-xs md:text-sm">
+                            <Printer className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
+                            Print
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={handleDownload} className="text-xs md:text-sm">
+                            <Download className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
+                            Download
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-0">
+                        <div className="border-t overflow-x-auto">
+                          <InvoicePreview 
+                            invoice={invoiceData} 
+                            template={selectedTemplate} 
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </>
                 ) : (
                   <Card className="h-full animate-fade-in">
                     <CardContent className="h-full flex flex-col items-center justify-center text-center p-6">
