@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -15,20 +14,13 @@ interface TransactionInputProps {
 const TransactionInput = ({ onTransactionCreated }: TransactionInputProps) => {
   const [prompt, setPrompt] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const { checkTransactionLimit } = useAuth();
+  const { user } = useAuth();
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!prompt.trim()) {
       toast.error('Please enter a transaction description');
-      return;
-    }
-    
-    // First check if user has reached transaction limit
-    const canCreateTransaction = await checkTransactionLimit();
-    if (!canCreateTransaction) {
-      toast.error('Transaction limit reached');
       return;
     }
     

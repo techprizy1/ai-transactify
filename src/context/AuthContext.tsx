@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,7 +7,6 @@ type AuthContextType = {
   session: Session | null;
   user: User | null;
   loading: boolean;
-  checkTransactionLimit: () => Promise<boolean>;
   signOut: () => Promise<void>;
 };
 
@@ -16,7 +14,6 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
   loading: true,
-  checkTransactionLimit: async () => true,
   signOut: async () => {},
 });
 
@@ -55,27 +52,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     getInitialSession();
   }, []);
 
-  const checkTransactionLimit = async (): Promise<boolean> => {
-    try {
-      // Count existing transactions
-      const { count, error } = await supabase
-        .from('transactions')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user?.id);
-      
-      if (error) {
-        console.error('Error counting transactions:', error);
-        return false;
-      }
-      
-      // Users can create up to 5 transactions
-      return (count !== null && count < 5);
-    } catch (error) {
-      console.error('Error checking transaction limit:', error);
-      return false;
-    }
-  };
-
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
@@ -91,7 +67,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     session,
     user,
     loading,
-    checkTransactionLimit,
     signOut,
   };
 

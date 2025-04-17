@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/AppSidebar';
@@ -12,7 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 const Transactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user, checkTransactionLimit } = useAuth();
+  const { user } = useAuth();
   
   // Load transactions from database on component mount
   const fetchTransactions = async () => {
@@ -44,13 +43,6 @@ const Transactions = () => {
   const handleTransactionCreated = async (aiResponse: AITransactionResponse) => {
     if (!user) {
       toast.error('You must be logged in to create transactions');
-      return;
-    }
-    
-    // Check transaction limit before proceeding
-    const canCreateTransaction = await checkTransactionLimit();
-    if (!canCreateTransaction) {
-      toast.error('Transaction limit reached. You can create up to 5 transactions.');
       return;
     }
     
