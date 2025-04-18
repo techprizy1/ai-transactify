@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { SidebarInset } from "@/components/ui/sidebar";
 import ReportSummary from '@/components/report/ReportSummary';
 import { Transaction } from '@/lib/types';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { calculateFinancialData, FinancialData } from '@/lib/financialUtils';
 import {
   Card,
   CardContent,
@@ -33,6 +33,7 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 const FinancialAnalysis = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [financialData, setFinancialData] = useState<FinancialData | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   
@@ -48,7 +49,9 @@ const FinancialAnalysis = () => {
           throw error;
         }
         
-        setTransactions(data as Transaction[]);
+        const transactionsData = data as Transaction[];
+        setTransactions(transactionsData);
+        setFinancialData(calculateFinancialData(transactionsData));
       } catch (error) {
         console.error('Failed to fetch transactions:', error);
         toast({
@@ -109,18 +112,9 @@ const FinancialAnalysis = () => {
   };
   
   const processExpenseBreakdown = () => {
-    const expenseCategories: Record<string, number> = {};
+    if (!financialData) return [];
     
-    transactions
-      .filter(t => t.type === 'expense' || t.type === 'purchase')
-      .forEach(transaction => {
-        if (!expenseCategories[transaction.category]) {
-          expenseCategories[transaction.category] = 0;
-        }
-        expenseCategories[transaction.category] += transaction.amount;
-      });
-    
-    return Object.entries(expenseCategories).map(([name, value]) => ({
+    return Object.entries(financialData.expensesByCategory).map(([name, value]) => ({
       name,
       value
     }));
@@ -130,35 +124,31 @@ const FinancialAnalysis = () => {
   const cashFlowData = processCashFlowData();
   const expenseBreakdown = processExpenseBreakdown();
 
-  // Calculate financial ratios
-  const totalAssets = 30500; // These would ideally come from the actual balance sheet
-  const totalLiabilities = 10000;
-  const totalEquity = 20500;
-  const totalIncome = transactions
-    .filter(t => t.type === 'income' || t.type === 'sale')
-    .reduce((sum, t) => sum + t.amount, 0);
-  const totalExpense = transactions
-    .filter(t => t.type === 'expense' || t.type === 'purchase')
-    .reduce((sum, t) => sum + t.amount, 0);
-  const grossProfit = totalIncome;
-  const netProfit = totalIncome - totalExpense;
-  
-  const currentRatio = (totalAssets / totalLiabilities).toFixed(2);
-  const debtToEquity = (totalLiabilities / totalEquity).toFixed(2);
-  const grossMargin = totalIncome > 0 ? ((grossProfit / totalIncome) * 100).toFixed(0) + '%' : '0%';
-  const netProfitMargin = totalIncome > 0 ? ((netProfit / totalIncome) * 100).toFixed(0) + '%' : '0%';
-  const returnOnAssets = totalAssets > 0 ? ((netProfit / totalAssets) * 100).toFixed(0) + '%' : '0%';
-  const returnOnEquity = totalEquity > 0 ? ((netProfit / totalEquity) * 100).toFixed(0) + '%' : '0%';
-
   // Financial ratios data
-  const ratios = [
-    { name: 'Current Ratio', value: currentRatio },
-    { name: 'Debt to Equity', value: debtToEquity },
-    { name: 'Gross Margin', value: grossMargin },
-    { name: 'Net Profit Margin', value: netProfitMargin },
-    { name: 'Return on Assets', value: returnOnAssets },
-    { name: 'Return on Equity', value: returnOnEquity },
-  ];
+  const formatRatioValue = (value: string) => {
+    // Check if value is infinity symbol
+    if (value === '∞') return value;
+    
+    // Check if value contains percentage
+    if (value.includes('%')) return value;
+    
+    // Try to parse as number for decimal formatting
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue)) {
+      return numValue.toFixed(2);
+    }
+    
+    return value;
+  };
+
+  const ratios = financialData ? [
+    { name: 'Current Ratio', value: formatRatioValue(financialData.currentRatio) },
+    { name: 'Debt to Equity', value: formatRatioValue(financialData.debtToEquity) },
+    { name: 'Gross Margin', value: financialData.grossMargin },
+    { name: 'Net Profit Margin', value: financialData.netProfitMargin },
+    { name: 'Return on Assets', value: financialData.returnOnAssets },
+    { name: 'Return on Equity', value: financialData.returnOnEquity },
+  ] : [];
 
   return (
     <SidebarInset>
@@ -265,15 +255,55 @@ const FinancialAnalysis = () => {
                             <tr className="border-b">
                               <th className="text-left py-2">Ratio</th>
                               <th className="text-right py-2">Value</th>
+                              <th className="text-right py-2">Status</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {ratios.map((ratio, index) => (
-                              <tr key={index} className="border-b border-border/20">
-                                <td className="py-2">{ratio.name}</td>
-                                <td className="text-right font-medium">{ratio.value}</td>
-                              </tr>
-                            ))}
+                            {ratios.map((ratio, index) => {
+                              // Determine status for each ratio
+                              let status = "neutral";
+                              let statusColor = "text-yellow-500";
+                              
+                              if (ratio.name === "Current Ratio") {
+                                if (ratio.value === "∞" || parseFloat(ratio.value) >= 2) {
+                                  status = "good";
+                                  statusColor = "text-green-500";
+                                } else if (parseFloat(ratio.value) < 1) {
+                                  status = "concern";
+                                  statusColor = "text-red-500";
+                                }
+                              } else if (ratio.name === "Debt to Equity") {
+                                if (parseFloat(ratio.value) <= 1) {
+                                  status = "good";
+                                  statusColor = "text-green-500";
+                                } else if (parseFloat(ratio.value) > 2) {
+                                  status = "concern";
+                                  statusColor = "text-red-500";
+                                }
+                              } else if (ratio.name.includes("Margin") || ratio.name.includes("Return")) {
+                                // Extract the numeric part by removing the % character
+                                const percentValue = parseFloat(ratio.value.replace('%', ''));
+                                if (percentValue >= 15) {
+                                  status = "good";
+                                  statusColor = "text-green-500";
+                                } else if (percentValue < 5) {
+                                  status = "concern";
+                                  statusColor = "text-red-500";
+                                }
+                              }
+                              
+                              return (
+                                <tr key={index} className="border-b border-border/20">
+                                  <td className="py-2">{ratio.name}</td>
+                                  <td className="text-right font-medium">{ratio.value}</td>
+                                  <td className={`text-right font-medium ${statusColor}`}>
+                                    {status === "good" && "✓"}
+                                    {status === "concern" && "!"}
+                                    {status === "neutral" && "○"}
+                                  </td>
+                                </tr>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>
@@ -289,17 +319,17 @@ const FinancialAnalysis = () => {
                     <div className="space-y-4 text-sm">
                       <div className="bg-muted/30 p-3 rounded-md">
                         <h3 className="font-semibold mb-1">Liquidity Analysis</h3>
-                        <p>Current liquidity indicators show that the business maintains a healthy cash position with a current ratio of {currentRatio}, above the recommended minimum of 2.0.</p>
+                        <p>Current liquidity indicators show that the business maintains a {financialData?.currentRatio === '∞' ? 'very strong' : 'healthy'} cash position with a current ratio of {formatRatioValue(financialData?.currentRatio || '0')}, {financialData?.currentRatio !== '∞' && parseFloat(financialData?.currentRatio || '0') >= 2 ? 'above' : 'below'} the recommended minimum of 2.0.</p>
                       </div>
                       
                       <div className="bg-muted/30 p-3 rounded-md">
                         <h3 className="font-semibold mb-1">Profitability Assessment</h3>
-                        <p>The business is maintaining a gross margin of {grossMargin} and net profit margin of {netProfitMargin}. Return on equity at {returnOnEquity} indicates the efficiency of capital use.</p>
+                        <p>The business is maintaining a gross margin of {financialData?.grossMargin} and net profit margin of {financialData?.netProfitMargin}. Return on equity at {financialData?.returnOnEquity} indicates the efficiency of capital use.</p>
                       </div>
                       
                       <div className="bg-muted/30 p-3 rounded-md">
                         <h3 className="font-semibold mb-1">Growth Trajectory</h3>
-                        <p>Analysis of monthly trends indicates {netProfit >= 0 ? 'positive' : 'negative'} growth with a net {netProfit >= 0 ? 'profit' : 'loss'} of ₹{Math.abs(netProfit).toFixed(2)}.</p>
+                        <p>Analysis of monthly trends indicates {financialData && financialData.netProfit >= 0 ? 'positive' : 'negative'} growth with a net {financialData && financialData.netProfit >= 0 ? 'profit' : 'loss'} of ₹{financialData ? Math.abs(financialData.netProfit).toFixed(2) : '0'}.</p>
                       </div>
                     </div>
                   </CardContent>

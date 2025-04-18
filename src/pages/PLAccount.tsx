@@ -1,13 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
 import { SidebarInset } from "@/components/ui/sidebar";
 import ReportSummary from '@/components/report/ReportSummary';
 import { Transaction } from '@/lib/types';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { calculateFinancialData, FinancialData } from '@/lib/financialUtils';
 
 const PLAccount = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [financialData, setFinancialData] = useState<FinancialData | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -23,7 +24,9 @@ const PLAccount = () => {
           throw error;
         }
         
-        setTransactions(data as Transaction[]);
+        const transactionsData = data as Transaction[];
+        setTransactions(transactionsData);
+        setFinancialData(calculateFinancialData(transactionsData));
       } catch (error) {
         console.error('Failed to fetch transactions:', error);
         toast({
@@ -38,35 +41,6 @@ const PLAccount = () => {
     
     fetchTransactions();
   }, [toast]);
-
-  // Filter income and expense transactions
-  const incomeTransactions = transactions.filter(t => t.type === 'income' || t.type === 'sale');
-  const expenseTransactions = transactions.filter(t => t.type === 'expense' || t.type === 'purchase');
-  
-  // Calculate totals
-  const totalIncome = incomeTransactions.reduce((sum, t) => sum + t.amount, 0);
-  const totalExpense = expenseTransactions.reduce((sum, t) => sum + t.amount, 0);
-  const netProfit = totalIncome - totalExpense;
-
-  // Group income by category
-  const incomeByCategory = incomeTransactions.reduce((acc, transaction) => {
-    const category = transaction.category;
-    if (!acc[category]) {
-      acc[category] = 0;
-    }
-    acc[category] += transaction.amount;
-    return acc;
-  }, {} as Record<string, number>);
-
-  // Group expenses by category
-  const expensesByCategory = expenseTransactions.reduce((acc, transaction) => {
-    const category = transaction.category;
-    if (!acc[category]) {
-      acc[category] = 0;
-    }
-    acc[category] += transaction.amount;
-    return acc;
-  }, {} as Record<string, number>);
 
   return (
     <SidebarInset>
@@ -95,20 +69,50 @@ const PLAccount = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {Object.entries(incomeByCategory).map(([category, amount], index) => (
+                          {financialData && Object.entries(financialData.incomeByCategory).map(([category, amount], index) => (
                             <tr key={index} className="border-b border-border/20">
                               <td className="py-2">{category}</td>
                               <td className="text-right">₹{amount.toFixed(2)}</td>
                             </tr>
                           ))}
-                          {Object.keys(incomeByCategory).length === 0 && (
+                          {financialData && Object.keys(financialData.incomeByCategory).length === 0 && (
                             <tr className="border-b border-border/20">
                               <td className="py-2 text-muted-foreground" colSpan={2}>No revenue data available</td>
                             </tr>
                           )}
                           <tr className="font-medium">
                             <td className="py-2">Total Revenue</td>
-                            <td className="text-right">₹{totalIncome.toFixed(2)}</td>
+                            <td className="text-right">₹{financialData?.totalIncome.toFixed(2) || '0.00'}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  
+                  {financialData && financialData.costOfGoodsSold > 0 && (
+                    <div>
+                      <h3 className="text-lg font-medium mb-2">Cost of Goods Sold</h3>
+                      <div className="bg-muted/50 rounded-lg p-4">
+                        <table className="w-full">
+                          <tbody>
+                            <tr className="border-b border-border/20">
+                              <td className="py-2">Cost of Goods Sold</td>
+                              <td className="text-right">₹{financialData.costOfGoodsSold.toFixed(2)}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Gross Profit</h3>
+                    <div className="bg-muted/50 rounded-lg p-4">
+                      <table className="w-full">
+                        <tbody>
+                          <tr className="font-medium">
+                            <td className="py-2">Gross Profit</td>
+                            <td className="text-right">₹{financialData?.grossProfit.toFixed(2) || '0.00'}</td>
                           </tr>
                         </tbody>
                       </table>
@@ -126,20 +130,20 @@ const PLAccount = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {Object.entries(expensesByCategory).map(([category, amount], index) => (
+                          {financialData && Object.entries(financialData.expensesByCategory).map(([category, amount], index) => (
                             <tr key={index} className="border-b border-border/20">
                               <td className="py-2">{category}</td>
                               <td className="text-right">₹{amount.toFixed(2)}</td>
                             </tr>
                           ))}
-                          {Object.keys(expensesByCategory).length === 0 && (
+                          {financialData && Object.keys(financialData.expensesByCategory).length === 0 && (
                             <tr className="border-b border-border/20">
                               <td className="py-2 text-muted-foreground" colSpan={2}>No expense data available</td>
                             </tr>
                           )}
                           <tr className="font-medium">
                             <td className="py-2">Total Expenses</td>
-                            <td className="text-right">₹{totalExpense.toFixed(2)}</td>
+                            <td className="text-right">₹{financialData ? (financialData.totalExpenses + financialData.costOfGoodsSold).toFixed(2) : '0.00'}</td>
                           </tr>
                         </tbody>
                       </table>
@@ -149,8 +153,8 @@ const PLAccount = () => {
                   <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
                     <div className="flex justify-between items-center">
                       <h3 className="text-lg font-medium">Net Profit</h3>
-                      <p className={`text-xl font-semibold ${netProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                        ₹{Math.abs(netProfit).toFixed(2)} {netProfit >= 0 ? '' : '(Loss)'}
+                      <p className={`text-xl font-semibold ${financialData && financialData.netProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                        ₹{financialData ? Math.abs(financialData.netProfit).toFixed(2) : '0.00'} {financialData && financialData.netProfit >= 0 ? '' : '(Loss)'}
                       </p>
                     </div>
                   </div>
