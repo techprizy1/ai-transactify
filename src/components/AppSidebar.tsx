@@ -1,4 +1,3 @@
-
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Sidebar,
@@ -26,7 +25,9 @@ import {
   Sparkles,
   BarChart3,
   PieChart,
-  BookText
+  BookText,
+  MessageCircle,
+  HelpCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/context/AuthContext';
@@ -322,6 +323,48 @@ export function AppSidebar() {
                   </div>
                 );
               })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Support Widget */}
+        <SidebarGroup className="mt-6 px-3">
+          <SidebarGroupLabel className="px-4 text-xs uppercase tracking-widest text-muted-foreground/80 font-semibold">
+            Support
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <div className="animate-fadeIn">
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    asChild 
+                    tooltip="WhatsApp Support"
+                    className="hover:bg-accent/50 transition-all duration-200 rounded-lg my-1"
+                  >
+                    <a 
+                      href="https://wa.me/+918695018620" 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="flex items-center gap-3 p-2.5 pl-3"
+                    >
+                      <MessageCircle className="text-green-500" />
+                      <span>WhatsApp Support</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    asChild 
+                    tooltip="Help Center"
+                    className="hover:bg-accent/50 transition-all duration-200 rounded-lg my-1"
+                  >
+                    <Link to="/help" className="flex items-center gap-3 p-2.5 pl-3">
+                      <HelpCircle className="text-blue-500" />
+                      <span>Help Center</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </div>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

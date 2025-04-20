@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { CircleDollarSign, LineChart, PlusCircle, Home, LogOut, User, FileText, Settings } from "lucide-react";
+import { CircleDollarSign, LineChart, PlusCircle, Home, LogOut, User, FileText, Settings, Phone } from "lucide-react";
 import { useAuth } from '@/context/AuthContext';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -35,6 +34,10 @@ const Navbar = () => {
   const getInitials = () => {
     if (!user || !user.email) return '?';
     return user.email.charAt(0).toUpperCase();
+  };
+
+  const openWhatsAppSupport = () => {
+    window.open('https://wa.me/+918695018620', '_blank');
   };
 
   return (
@@ -73,6 +76,10 @@ const Navbar = () => {
                   <span>Invoice</span>
                 </Link>
               </Button>
+              <Button variant="ghost" onClick={openWhatsAppSupport} className="flex items-center space-x-1">
+                <Phone className="w-4 h-4 mr-1" />
+                <span>Support</span>
+              </Button>
             </>
           )}
         </nav>
@@ -103,6 +110,11 @@ const Navbar = () => {
                     <ThemeToggle variant="menuitem" />
                   </div>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={openWhatsAppSupport}>
+                    <Phone className="mr-2 h-4 w-4" />
+                    <span>WhatsApp Support</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Sign out</span>
@@ -115,6 +127,10 @@ const Navbar = () => {
               <ThemeToggle variant="icon" />
               <Button variant="outline" size="sm" className="hidden md:flex" onClick={() => navigate('/auth')}>
                 Sign In
+              </Button>
+              <Button variant="ghost" size="sm" className="hidden md:flex" onClick={openWhatsAppSupport}>
+                <Phone className="w-4 h-4 mr-1" />
+                <span>Support</span>
               </Button>
               <Button size="sm" className="hidden md:flex" onClick={() => navigate('/auth')}>
                 Get Started
