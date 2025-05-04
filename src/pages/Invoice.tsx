@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,7 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import InvoicePreview from '@/components/InvoicePreview';
 import { downloadInvoice, printInvoice } from '@/utils/pdf-utils';
 import { InvoiceData, InvoiceItem } from '@/lib/types';
-import { InvoiceTemplateType, InvoiceTemplates } from '@/components/InvoiceTemplates';
+import { InvoiceTemplateType, templateOptions } from '@/components/InvoiceTemplates';
 
 const Invoice = () => {
   const { invoiceNumber } = useParams<{ invoiceNumber: string }>();
@@ -47,6 +46,7 @@ const Invoice = () => {
       
       try {
         setLoading(true);
+        
         // Use type assertion to bypass TypeScript error
         const { data: invoiceData, error: invoiceError } = await supabase
           .from('invoices' as any)
@@ -61,15 +61,15 @@ const Invoice = () => {
         if (invoiceData && invoiceData.length > 0) {
           const fetchedInvoice = invoiceData[0] as any;
           setInvoiceData({
-            invoiceNumber: fetchedInvoice.invoice_number,
-            date: fetchedInvoice.date,
-            dueDate: fetchedInvoice.due_date,
-            billTo: fetchedInvoice.bill_to as InvoiceData['billTo'],
-            items: fetchedInvoice.items as InvoiceItem[],
-            subtotal: fetchedInvoice.subtotal,
-            taxRate: fetchedInvoice.tax_rate,
-            taxAmount: fetchedInvoice.tax_amount,
-            total: fetchedInvoice.total,
+            invoiceNumber: fetchedInvoice.invoice_number || '',
+            date: fetchedInvoice.date || '',
+            dueDate: fetchedInvoice.due_date || '',
+            billTo: fetchedInvoice.bill_to || { name: '', address: '' },
+            items: fetchedInvoice.items || [],
+            subtotal: fetchedInvoice.subtotal || 0,
+            taxRate: fetchedInvoice.tax_rate || 0,
+            taxAmount: fetchedInvoice.tax_amount || 0,
+            total: fetchedInvoice.total || 0,
           });
         } else if (invoiceNumber) {
           toast.info('Invoice not found, creating a new one');
@@ -377,7 +377,7 @@ const Invoice = () => {
                   <SelectValue placeholder="Select a template" />
                 </SelectTrigger>
                 <SelectContent>
-                  {InvoiceTemplates.map((template) => (
+                  {templateOptions.map((template) => (
                     <SelectItem key={template.value} value={template.value}>
                       {template.label}
                     </SelectItem>
