@@ -1,3 +1,4 @@
+
 import { Transaction } from './types';
 
 export interface FinancialData {
@@ -40,9 +41,10 @@ export function calculateFinancialData(transactions: Transaction[]): FinancialDa
   // Filter transactions by type
   const incomeTransactions = transactions.filter(t => t.type === 'income' || t.type === 'sale');
   const expenseTransactions = transactions.filter(t => t.type === 'expense');
-  const purchaseTransactions = transactions.filter(t => t.type === 'purchase' && t.category === 'inventory');
+  const purchaseTransactions = transactions.filter(t => t.type === 'purchase');
+  const inventoryPurchases = purchaseTransactions.filter(t => t.category === 'inventory');
   
-  // Group transactions by category
+  // Group transactions by category for balance sheet items
   const cashTransactions = transactions.filter(t => t.category === 'cash');
   const bankTransactions = transactions.filter(t => t.category === 'bank');
   const receivableTransactions = transactions.filter(t => t.category === 'accounts_receivable');
@@ -53,8 +55,10 @@ export function calculateFinancialData(transactions: Transaction[]): FinancialDa
 
   // Calculate income statement values
   const totalIncome = incomeTransactions.reduce((sum, t) => sum + t.amount, 0);
-  const costOfGoodsSold = purchaseTransactions.reduce((sum, t) => sum + t.amount, 0);
-  const totalExpenses = expenseTransactions.reduce((sum, t) => sum + t.amount, 0);
+  const costOfGoodsSold = inventoryPurchases.reduce((sum, t) => sum + t.amount, 0);
+  const nonInventoryPurchases = purchaseTransactions.filter(t => t.category !== 'inventory');
+  const totalExpenses = expenseTransactions.reduce((sum, t) => sum + t.amount, 0) + 
+                        nonInventoryPurchases.reduce((sum, t) => sum + t.amount, 0);
   const grossProfit = totalIncome - costOfGoodsSold;
   const netProfit = grossProfit - totalExpenses;
 
@@ -132,7 +136,8 @@ export function calculateFinancialData(transactions: Transaction[]): FinancialDa
     return acc;
   }, {} as Record<string, number>);
 
-  const expensesByCategory = expenseTransactions.reduce((acc, transaction) => {
+  // Include all expenses and non-inventory purchases in expenses by category
+  const expensesByCategory = [...expenseTransactions, ...nonInventoryPurchases].reduce((acc, transaction) => {
     const category = transaction.category;
     if (!acc[category]) {
       acc[category] = 0;
