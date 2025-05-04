@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -58,7 +59,7 @@ const Invoice = () => {
         }
         
         if (invoiceData && invoiceData.length > 0) {
-          const fetchedInvoice = invoiceData[0];
+          const fetchedInvoice = invoiceData[0] as any;
           setInvoiceData({
             invoiceNumber: fetchedInvoice.invoice_number,
             date: fetchedInvoice.date,
@@ -118,12 +119,12 @@ const Invoice = () => {
   
   const handleItemChange = (index: number, field: string, value: any) => {
     const newItems = [...invoiceData.items];
-    newItems[index][field] = value;
+    newItems[index][field as keyof InvoiceItem] = value;
     
     // Calculate amount if quantity or unitPrice changes
     if (field === 'quantity' || field === 'unitPrice') {
-      const quantity = parseFloat(newItems[index].quantity || 0);
-      const unitPrice = parseFloat(newItems[index].unitPrice || 0);
+      const quantity = parseFloat(newItems[index].quantity.toString() || '0');
+      const unitPrice = parseFloat(newItems[index].unitPrice.toString() || '0');
       newItems[index].amount = quantity * unitPrice;
     }
     
@@ -156,7 +157,7 @@ const Invoice = () => {
       setLoading(true);
       
       const { data, error } = await supabase
-        .from('invoices')
+        .from('invoices' as any)
         .upsert({
           id: invoiceNumber || undefined,
           user_id: user.id,
@@ -368,7 +369,10 @@ const Invoice = () => {
           <CardContent className="space-y-4">
             <div>
               <Label htmlFor="template">Template</Label>
-              <Select onValueChange={setTemplate} defaultValue={template}>
+              <Select 
+                onValueChange={(value) => setTemplate(value as InvoiceTemplateType)} 
+                defaultValue={template}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a template" />
                 </SelectTrigger>

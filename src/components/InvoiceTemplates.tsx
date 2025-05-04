@@ -4,6 +4,15 @@ import { Check, Layout, FileText, LayoutGrid, Layers, Palette } from 'lucide-rea
 
 export type InvoiceTemplateType = 'classic' | 'modern' | 'minimal' | 'corporate' | 'creative';
 
+// Create an array for use in Select component
+export const InvoiceTemplates = [
+  { value: 'classic', label: 'Classic' },
+  { value: 'modern', label: 'Modern' },
+  { value: 'minimal', label: 'Minimal' },
+  { value: 'corporate', label: 'Corporate' },
+  { value: 'creative', label: 'Creative' },
+];
+
 interface InvoiceTemplatesProps {
   selectedTemplate: InvoiceTemplateType;
   onSelectTemplate: (template: InvoiceTemplateType) => void;
