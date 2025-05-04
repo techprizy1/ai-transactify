@@ -1,382 +1,413 @@
-
 import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Loader2, FileText, Send, Download, Printer } from 'lucide-react';
-import { supabase } from "@/integrations/supabase/client";
-import InvoicePreview from '@/components/InvoicePreview';
-import InvoiceTemplates, { InvoiceTemplateType } from '@/components/InvoiceTemplates';
-import { downloadInvoice, printInvoice } from '@/utils/pdf-utils';
-import { SidebarProvider } from '@/components/ui/sidebar';
-import AppSidebar from '@/components/AppSidebar';
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Separator } from "@/components/ui/separator"
 import { useAuth } from '@/context/AuthContext';
-import { useIsMobile } from '@/hooks/use-mobile';
-import InvoiceHistory from '@/components/InvoiceHistory';
-import { 
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardFooter
-} from '@/components/ui/card';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger
-} from '@/components/ui/tabs';
-import Loader from '@/components/Loader';
-
-interface InvoiceItem {
-  description: string;
-  quantity: number;
-  unitPrice: number;
-  amount: number;
-}
-
-interface BusinessInfo {
-  business_name: string | null;
-  business_address: string | null;
-  contact_number: string | null;
-  gstn_number: string | null;
-}
-
-interface InvoiceData {
-  invoiceNumber: string;
-  date: string;
-  dueDate: string;
-  billTo: {
-    name: string;
-    address: string;
-    email?: string;
-  };
-  items: InvoiceItem[];
-  subtotal: number;
-  taxRate: number;
-  taxAmount: number;
-  total: number;
-  businessInfo?: BusinessInfo;
-}
+import { supabase } from '@/integrations/supabase/client';
+import InvoicePreview from '@/components/InvoicePreview';
+import { downloadInvoice, printInvoice } from '@/utils/pdf-utils';
+import { InvoiceData, InvoiceItem } from '@/lib/types';
+import { InvoiceTemplateType, InvoiceTemplates } from '@/components/InvoiceTemplates';
 
 const Invoice = () => {
-  const [prompt, setPrompt] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [invoiceData, setInvoiceData] = useState<InvoiceData | null>(null);
-  const [selectedTemplate, setSelectedTemplate] = useState<InvoiceTemplateType>('classic');
+  const { invoiceNumber } = useParams<{ invoiceNumber: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
-  const isMobile = useIsMobile();
-  const [activeTab, setActiveTab] = useState<string>("generate");
-  const [businessInfo, setBusinessInfo] = useState<BusinessInfo>({
-    business_name: null,
-    business_address: null,
-    contact_number: null,
-    gstn_number: null
+  
+  const [invoiceData, setInvoiceData] = useState<InvoiceData>({
+    invoiceNumber: invoiceNumber || '',
+    date: new Date().toISOString().split('T')[0],
+    dueDate: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString().split('T')[0],
+    billTo: {
+      name: '',
+      address: '',
+    },
+    items: [{ description: '', quantity: 1, unitPrice: 0, amount: 0 }],
+    subtotal: 0,
+    taxRate: 0,
+    taxAmount: 0,
+    total: 0,
   });
   
+  const [loading, setLoading] = useState(false);
+  const [template, setTemplate] = useState<InvoiceTemplateType>('classic');
+  
   useEffect(() => {
-    const fetchBusinessInfo = async () => {
+    const fetchInvoices = async () => {
       if (!user) return;
       
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('business_name, business_address, contact_number, gstn_number')
-          .eq('id', user.id)
-          .maybeSingle();
-          
-        if (error) {
-          console.error('Error fetching business info:', error);
+        setLoading(true);
+        // Use type assertion to bypass TypeScript error
+        const { data: invoiceData, error: invoiceError } = await supabase
+          .from('invoices' as any)
+          .select('*')
+          .eq('invoice_number', invoiceNumber);
+      
+        if (invoiceError) {
+          console.error('Error fetching invoice:', invoiceError);
           return;
         }
         
-        if (data) {
-          const profileData = data as {
-            business_name: string | null;
-            business_address: string | null;
-            contact_number: string | null;
-            gstn_number: string | null;
-          };
-          
-          setBusinessInfo({
-            business_name: profileData.business_name,
-            business_address: profileData.business_address,
-            contact_number: profileData.contact_number,
-            gstn_number: profileData.gstn_number
+        if (invoiceData && invoiceData.length > 0) {
+          const fetchedInvoice = invoiceData[0];
+          setInvoiceData({
+            invoiceNumber: fetchedInvoice.invoice_number,
+            date: fetchedInvoice.date,
+            dueDate: fetchedInvoice.due_date,
+            billTo: fetchedInvoice.bill_to as InvoiceData['billTo'],
+            items: fetchedInvoice.items as InvoiceItem[],
+            subtotal: fetchedInvoice.subtotal,
+            taxRate: fetchedInvoice.tax_rate,
+            taxAmount: fetchedInvoice.tax_amount,
+            total: fetchedInvoice.total,
           });
+        } else if (invoiceNumber) {
+          toast.info('Invoice not found, creating a new one');
         }
       } catch (error) {
-        console.error('Error fetching business info:', error);
+        console.error('Error fetching invoice:', error);
+      } finally {
+        setLoading(false);
       }
     };
     
-    fetchBusinessInfo();
-  }, [user]);
+    fetchInvoices();
+  }, [user, invoiceNumber]);
   
-  const handleGenerateInvoice = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    // Recalculate amounts whenever items or tax rate changes
+    const newSubtotal = invoiceData.items.reduce((acc, item) => acc + item.amount, 0);
+    const newTaxAmount = newSubtotal * (invoiceData.taxRate / 100);
+    const newTotal = newSubtotal + newTaxAmount;
     
-    if (!prompt.trim()) {
-      toast.error('Please enter a description of the invoice');
-      return;
+    setInvoiceData(prev => ({
+      ...prev,
+      subtotal: newSubtotal,
+      taxAmount: newTaxAmount,
+      total: newTotal,
+    }));
+  }, [invoiceData.items, invoiceData.taxRate]);
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setInvoiceData(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+  
+  const handleBillToChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setInvoiceData(prev => ({
+      ...prev,
+      billTo: {
+        ...prev.billTo,
+        [name]: value,
+      },
+    }));
+  };
+  
+  const handleItemChange = (index: number, field: string, value: any) => {
+    const newItems = [...invoiceData.items];
+    newItems[index][field] = value;
+    
+    // Calculate amount if quantity or unitPrice changes
+    if (field === 'quantity' || field === 'unitPrice') {
+      const quantity = parseFloat(newItems[index].quantity || 0);
+      const unitPrice = parseFloat(newItems[index].unitPrice || 0);
+      newItems[index].amount = quantity * unitPrice;
     }
     
-    setIsLoading(true);
+    setInvoiceData(prev => ({
+      ...prev,
+      items: newItems,
+    }));
+  };
+  
+  const addItem = () => {
+    setInvoiceData(prev => ({
+      ...prev,
+      items: [...prev.items, { description: '', quantity: 1, unitPrice: 0, amount: 0 }],
+    }));
+  };
+  
+  const removeItem = (index: number) => {
+    const newItems = [...invoiceData.items];
+    newItems.splice(index, 1);
+    setInvoiceData(prev => ({
+      ...prev,
+      items: newItems,
+    }));
+  };
+  
+  const handleSubmit = async () => {
+    if (!user) return;
     
     try {
-      const { data, error } = await supabase.functions.invoke('generate-invoice', {
-        body: { 
-          prompt,
-          businessInfo: {
-            ...businessInfo,
-            gstn_number: businessInfo.gstn_number || null
-          }
-        },
-      });
-
+      setLoading(true);
+      
+      const { data, error } = await supabase
+        .from('invoices')
+        .upsert({
+          id: invoiceNumber || undefined,
+          user_id: user.id,
+          invoice_number: invoiceData.invoiceNumber,
+          date: invoiceData.date,
+          due_date: invoiceData.dueDate,
+          bill_to: invoiceData.billTo,
+          items: invoiceData.items,
+          subtotal: invoiceData.subtotal,
+          tax_rate: invoiceData.taxRate,
+          tax_amount: invoiceData.taxAmount,
+          total: invoiceData.total,
+        }, { onConflict: 'invoice_number' });
+      
       if (error) {
-        console.error('Error calling generate-invoice function:', error);
-        toast.error('Failed to generate invoice. Please try again.');
-        return;
-      }
-
-      if (data.error) {
-        console.error('Error from generate-invoice function:', data.error);
-        toast.error('Failed to process invoice. Please try again with more details.');
+        console.error('Error saving invoice:', error);
+        toast.error('Failed to save invoice');
         return;
       }
       
-      setInvoiceData(data);
-      toast.success('Invoice generated successfully');
-      
-      // Save the invoice to the database
-      try {
-        // @ts-ignore - We need to ignore the type error since the invoices table doesn't exist in types yet
-        const { error: saveError } = await supabase
-          .from('invoices')
-          .insert({
-            invoice_number: data.invoiceNumber,
-            data: data,
-            user_id: user?.id
-          });
-        
-        if (saveError) {
-          console.error('Error saving invoice:', saveError);
-          toast.error('Failed to save invoice history');
-        }
-      } catch (saveError) {
-        console.error('Error saving invoice to history:', saveError);
-      }
+      toast.success('Invoice saved successfully');
+      navigate(`/invoice/${invoiceData.invoiceNumber}`);
     } catch (error) {
-      console.error('Error generating invoice:', error);
-      toast.error('Failed to generate invoice');
+      console.error('Error saving invoice:', error);
+      toast.error('Failed to save invoice');
     } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handlePrint = () => {
-    printInvoice();
-  };
-  
-  const handleDownload = async () => {
-    if (invoiceData) {
-      try {
-        toast.loading('Generating PDF...');
-        await downloadInvoice(invoiceData.invoiceNumber);
-        toast.success('PDF downloaded successfully');
-      } catch (error) {
-        console.error('Error downloading invoice:', error);
-        toast.error('Failed to download PDF');
-      } finally {
-        toast.dismiss();
-      }
+      setLoading(false);
     }
   };
   
-  const isBusinessInfoMissing = !businessInfo.business_name || !businessInfo.business_address || !businessInfo.contact_number;
+  const handlePrintInvoice = () => {
+    try {
+      printInvoice();
+      toast.success('Printing invoice...');
+    } catch (error) {
+      console.error('Error printing invoice:', error);
+      toast.error('Failed to print invoice');
+    }
+  };
+  
+  const handleDownloadInvoice = async () => {
+    try {
+      toast.loading('Generating PDF...');
+      await downloadInvoice(invoiceData.invoiceNumber);
+      toast.success('PDF downloaded successfully');
+    } catch (error) {
+      console.error('Error downloading invoice:', error);
+      toast.error('Failed to download PDF');
+    } finally {
+      toast.dismiss();
+    }
+  };
   
   return (
     <div className="flex-1 min-h-screen">
-      <main className="container mx-auto px-4 py-6 md:py-10 max-w-6xl">
-        <div className="text-center mb-8 md:mb-12 animate-fade-in">
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">AI Invoice Generator</h1>
-          <p className="mt-2 text-muted-foreground text-sm md:text-base">
-            Describe your invoice in natural language and our AI will generate it for you
+      <main className="container mx-auto max-w-4xl px-4 py-10">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold tracking-tight">Invoice</h1>
+          <p className="mt-2 text-muted-foreground">
+            Create and manage your invoices
           </p>
         </div>
         
-        {isBusinessInfoMissing && (
-          <div className="mb-6 md:mb-8 p-3 md:p-4 border border-yellow-200 bg-yellow-50 rounded-md">
-            <p className="text-yellow-800 font-medium text-sm md:text-base">Business information incomplete</p>
-            <p className="text-xs md:text-sm text-yellow-700 mt-1">
-              Add your business name, address, contact number, and GSTN number in your profile to display them on invoices.
-            </p>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="mt-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-800"
-              onClick={() => window.location.href = '/profile'}
-            >
-              Update Profile
-            </Button>
-          </div>
-        )}
-        
-        <Tabs defaultValue="generate" value={activeTab} onValueChange={setActiveTab} className="print:hidden">
-          <TabsList className="mb-6">
-            <TabsTrigger value="generate">Generate Invoice</TabsTrigger>
-            <TabsTrigger value="history">Invoice History</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="generate">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8 print:hidden">
-              <div className="space-y-4 md:space-y-8">
-                <Card className="animate-fade-in">
-                  <CardHeader>
-                    <CardTitle>Generate Invoice</CardTitle>
-                    <CardDescription>
-                      Describe your invoice in natural language
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <form onSubmit={handleGenerateInvoice} className="space-y-4">
-                      <div className="space-y-2">
-                        <Textarea
-                          id="invoice-input"
-                          placeholder={isMobile ? "Example: Create an invoice for web design services..." : "Example: Create an invoice for ABC Corp for web design services. Include 3 items: website design for ₹45000, logo design for ₹15000, and SEO setup for ₹25000. The invoice was issued on April 10th and is due in 30 days."}
-                          value={prompt}
-                          onChange={(e) => setPrompt(e.target.value)}
-                          rows={isMobile ? 4 : 6}
-                          className="resize-none transition-all focus-visible:ring-primary/20 focus-visible:ring-offset-0"
-                        />
-                      </div>
-                      
-                      <div className="pt-2">
-                        <Button 
-                          type="submit" 
-                          className="w-full relative overflow-hidden btn-hover-effect" 
-                          disabled={isLoading || !prompt.trim()}
-                        >
-                          {isLoading ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              <span className="text-sm">Generating...</span>
-                            </>
-                          ) : (
-                            <>
-                              <span className="text-sm">Generate Invoice</span>
-                              <Send className="ml-2 h-4 w-4" />
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </form>
-                  </CardContent>
-                </Card>
-                
-                <Card className="animate-fade-in">
-                  <CardHeader>
-                    <CardTitle>Example prompts</CardTitle>
-                    <CardDescription>
-                      Click on any example to use it
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {[
-                        "Create an invoice for ABC Corp for web design services. Include 3 items: website design for ₹45000, logo design for ₹15000, and SEO setup for ₹25000. The invoice was issued today and is due in 30 days.",
-                        "Generate an invoice for John Doe for consulting services at ₹5000 per hour for 10 hours with a tax rate of 18%.",
-                        "Invoice to Acme Inc. for office supplies: 5 laptops at ₹50000 each, 10 monitors at ₹15000 each, and 5 keyboards at ₹1500 each. Apply a 12% tax rate.",
-                        "Make an invoice for XYZ Ltd for software development work done in April. 80 hours of coding at ₹2000/hr and 20 hours of testing at ₹1500/hr. Invoice number INV-2023-42."
-                      ].map((example, index) => (
-                        <div 
-                          key={index} 
-                          className="p-2 md:p-3 bg-muted/50 rounded-md text-xs md:text-sm cursor-pointer hover:bg-muted transition-colors"
-                          onClick={() => {
-                            setPrompt(example);
-                            toast.success('Example copied to input');
-                          }}
-                        >
-                          {isMobile ? example.slice(0, 80) + '...' : example}
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-              
+        <Card className="glass-panel">
+          <CardHeader>
+            <CardTitle>Invoice Details</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                {invoiceData ? (
-                  <>
-                    <Card className="animate-fade-in mb-4">
-                      <CardHeader>
-                        <CardTitle>Invoice Settings</CardTitle>
-                        <CardDescription>
-                          Customize your invoice appearance
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <InvoiceTemplates 
-                          selectedTemplate={selectedTemplate}
-                          onSelectTemplate={setSelectedTemplate}
-                        />
-                      </CardContent>
-                    </Card>
-
-                    <Card className="animate-fade-in">
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                        <div>
-                          <CardTitle>Invoice Preview</CardTitle>
-                          <CardDescription>
-                            Invoice #{invoiceData.invoiceNumber}
-                          </CardDescription>
-                        </div>
-                        <div className="flex space-x-2">
-                          <Button variant="outline" size="sm" onClick={handlePrint} className="text-xs md:text-sm">
-                            <Printer className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
-                            Print
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={handleDownload} className="text-xs md:text-sm">
-                            <Download className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
-                            Download
-                          </Button>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="p-0">
-                        <div className="border-t overflow-x-auto">
-                          <InvoicePreview 
-                            invoice={invoiceData} 
-                            template={selectedTemplate} 
-                          />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </>
-                ) : (
-                  <Card className="h-full animate-fade-in">
-                    <CardContent className="h-full flex flex-col items-center justify-center text-center p-6">
-                      <FileText className="h-12 w-12 md:h-16 md:w-16 text-muted-foreground/50 mb-4" />
-                      <h3 className="text-base md:text-lg font-medium mb-2">No Invoice Generated Yet</h3>
-                      <p className="text-xs md:text-sm text-muted-foreground max-w-md">
-                        Enter a description of your invoice in the form and click "Generate Invoice" to create a new invoice using AI.
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
+                <Label htmlFor="invoiceNumber">Invoice Number</Label>
+                <Input 
+                  type="text" 
+                  id="invoiceNumber" 
+                  name="invoiceNumber" 
+                  value={invoiceData.invoiceNumber} 
+                  onChange={handleInputChange} 
+                />
+              </div>
+              <div>
+                <Label htmlFor="date">Date</Label>
+                <Input 
+                  type="date" 
+                  id="date" 
+                  name="date" 
+                  value={invoiceData.date} 
+                  onChange={handleInputChange} 
+                />
+              </div>
+              <div>
+                <Label htmlFor="dueDate">Due Date</Label>
+                <Input 
+                  type="date" 
+                  id="dueDate" 
+                  name="dueDate" 
+                  value={invoiceData.dueDate} 
+                  onChange={handleInputChange} 
+                />
+              </div>
+              <div>
+                <Label htmlFor="taxRate">Tax Rate (%)</Label>
+                <Input 
+                  type="number" 
+                  id="taxRate" 
+                  name="taxRate" 
+                  value={invoiceData.taxRate} 
+                  onChange={handleInputChange} 
+                />
               </div>
             </div>
-          </TabsContent>
-          
-          <TabsContent value="history">
-            <InvoiceHistory />
-          </TabsContent>
-        </Tabs>
+            
+            <Separator />
+            
+            <div>
+              <h2 className="text-xl font-semibold mb-2">Bill To</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="billToName">Name</Label>
+                  <Input 
+                    type="text" 
+                    id="billToName" 
+                    name="name" 
+                    value={invoiceData.billTo.name} 
+                    onChange={handleBillToChange} 
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="billToAddress">Address</Label>
+                  <Textarea
+                    id="billToAddress"
+                    name="address"
+                    value={invoiceData.billTo.address}
+                    onChange={handleBillToChange}
+                    rows={3}
+                    className="resize-none"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <Separator />
+            
+            <div>
+              <h2 className="text-xl font-semibold mb-2">Items</h2>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Quantity</TableHead>
+                    <TableHead>Unit Price</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead className="w-10"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {invoiceData.items.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell>
+                        <Input 
+                          type="text"
+                          value={item.description}
+                          onChange={(e) => handleItemChange(index, 'description', e.target.value)}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input 
+                          type="number"
+                          value={item.quantity}
+                          onChange={(e) => handleItemChange(index, 'quantity', parseFloat(e.target.value))}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input 
+                          type="number"
+                          value={item.unitPrice}
+                          onChange={(e) => handleItemChange(index, 'unitPrice', parseFloat(e.target.value))}
+                        />
+                      </TableCell>
+                      <TableCell>{item.amount.toFixed(2)}</TableCell>
+                      <TableCell>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => removeItem(index)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <Button 
+                variant="outline" 
+                className="mt-2"
+                onClick={addItem}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Item
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
         
-        <div className="hidden print:block">
-          {invoiceData && <InvoicePreview invoice={invoiceData} template={selectedTemplate} />}
-        </div>
+        <Card className="glass-panel mt-8">
+          <CardHeader>
+            <CardTitle>Preview & Actions</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="template">Template</Label>
+              <Select onValueChange={setTemplate} defaultValue={template}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a template" />
+                </SelectTrigger>
+                <SelectContent>
+                  {InvoiceTemplates.map((template) => (
+                    <SelectItem key={template.value} value={template.value}>
+                      {template.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <InvoicePreview invoice={invoiceData} template={template} />
+            
+            <div className="flex justify-between">
+              <Button 
+                onClick={handlePrintInvoice}
+                variant="outline"
+              >
+                Print Invoice
+              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={handleDownloadInvoice}
+                  variant="outline"
+                >
+                  Download PDF
+                </Button>
+                <Button 
+                  onClick={handleSubmit} 
+                  disabled={loading}
+                >
+                  {loading ? 'Saving...' : 'Save Invoice'}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </main>
     </div>
   );

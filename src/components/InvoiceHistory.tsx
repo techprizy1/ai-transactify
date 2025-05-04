@@ -32,9 +32,9 @@ const InvoiceHistory = () => {
       if (!user) return;
       
       try {
-        // @ts-ignore - We need to ignore the type error since the invoices table doesn't exist in types yet
+        // Using any type to bypass TypeScript error until types are properly updated
         const { data, error } = await supabase
-          .from('invoices')
+          .from('invoices' as any)
           .select('*')
           .order('created_at', { ascending: false });
         

@@ -48,8 +48,9 @@ const PurchaseReport = () => {
 
   const fetchPurchaseOrders = async () => {
     try {
+      // Use type assertion to bypass TypeScript error until types are updated
       const { data, error } = await supabase
-        .from('purchase_orders')
+        .from('purchase_orders' as any)
         .select('*')
         .order('created_at', { ascending: false });
         
@@ -58,7 +59,7 @@ const PurchaseReport = () => {
       }
       
       // Map the database fields to match the PurchaseOrder interface
-      const mappedData = data.map(order => ({
+      const mappedData = data.map((order: any) => ({
         id: order.id,
         supplier: order.supplier,
         deliveryDate: order.delivery_date,

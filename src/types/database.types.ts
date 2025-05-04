@@ -1,3 +1,4 @@
+
 export type Json =
   | string
   | number
@@ -127,6 +128,41 @@ export interface Database {
           category?: string
           created_at?: string
           updated_at?: string
+        }
+      }
+      purchase_orders: {
+        Row: {
+          id: string
+          supplier: string
+          delivery_date: string
+          items: Json
+          total_amount: number
+          status: string
+          created_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          supplier: string
+          delivery_date: string
+          items: Json
+          total_amount: number
+          status: string
+          created_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          supplier?: string
+          delivery_date?: string
+          items?: Json
+          total_amount?: number
+          status?: string
+          created_at?: string
+          updated_at?: string
+          user_id?: string
         }
       }
     }
