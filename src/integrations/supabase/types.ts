@@ -78,63 +78,6 @@ export type Database = {
         }
         Relationships: []
       }
-      invoices: {
-        Row: {
-          id: string
-          invoice_number: string
-          data: Json
-          user_id: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          invoice_number: string
-          data: Json
-          user_id: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          invoice_number?: string
-          data?: Json
-          user_id?: string
-          created_at?: string
-        }
-        Relationships: []
-      }
-      purchase_orders: {
-        Row: {
-          id: string
-          supplier: string
-          delivery_date: string
-          items: Json
-          total_amount: number
-          status: 'pending' | 'completed' | 'cancelled'
-          created_at: string
-          user_id: string
-        }
-        Insert: {
-          id?: string
-          supplier: string
-          delivery_date: string
-          items: Json
-          total_amount: number
-          status?: 'pending' | 'completed' | 'cancelled'
-          created_at?: string
-          user_id: string
-        }
-        Update: {
-          id?: string
-          supplier?: string
-          delivery_date?: string
-          items?: Json
-          total_amount?: number
-          status?: 'pending' | 'completed' | 'cancelled'
-          created_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never

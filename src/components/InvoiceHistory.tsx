@@ -1,59 +1,61 @@
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { Calendar, FileText, Eye, Download, Printer } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { downloadInvoice, printInvoice } from '@/utils/pdf-utils';
+import { Button } from './ui/button';
+import { Eye, Download, Printer } from 'lucide-react';
 import { toast } from 'sonner';
-
-interface StoredInvoice {
-  id: string;
-  invoice_number: string;
-  data: any;
-  created_at: string;
-  user_id: string;
-}
+import { downloadInvoice, printInvoice } from '@/utils/pdf-utils';
+import { StoredInvoice } from '@/lib/types';
+import { format } from 'date-fns';
 
 const InvoiceHistory = () => {
   const [invoices, setInvoices] = useState<StoredInvoice[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null);
   const { user } = useAuth();
+  
+  // Type guard function to check if the response data is StoredInvoice[]
+  function isStoredInvoiceArray(data: any): data is StoredInvoice[] {
+    return Array.isArray(data) && data.every(item => 
+      typeof item === 'object' && 
+      item !== null && 
+      'invoice_number' in item && 
+      'data' in item && 
+      'created_at' in item && 
+      'user_id' in item
+    );
+  }
 
   useEffect(() => {
     const fetchInvoices = async () => {
       if (!user) return;
+      
       try {
-        setLoading(true);
+        // @ts-ignore - We need to ignore the type error since the invoices table doesn't exist in types yet
         const { data, error } = await supabase
           .from('invoices')
           .select('*')
           .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        setInvoices(data || []);
+        
+        if (error) {
+          console.error('Error fetching invoices:', error);
+          return;
+        }
+        
+        if (data && isStoredInvoiceArray(data)) {
+          setInvoices(data);
+        }
       } catch (error) {
         console.error('Error fetching invoices:', error);
-        toast.error('Failed to load invoices');
       } finally {
         setLoading(false);
       }
     };
-
+    
     fetchInvoices();
   }, [user]);
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
+  
   const handlePrintInvoice = (invoiceNumber: string) => {
     try {
       printInvoice();
@@ -63,7 +65,7 @@ const InvoiceHistory = () => {
       toast.error('Failed to print invoice');
     }
   };
-
+  
   const handleDownloadInvoice = async (invoiceNumber: string) => {
     try {
       toast.loading('Generating PDF...');
@@ -76,101 +78,74 @@ const InvoiceHistory = () => {
       toast.dismiss();
     }
   };
-
-  const handleViewInvoice = (invoiceId: string) => {
-    setSelectedInvoice(invoiceId === selectedInvoice ? null : invoiceId);
-  };
-
+  
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Invoice History</h2>
-      </div>
-
-      {loading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <Card key={i}>
-              <CardContent className="p-4">
-                <div className="flex justify-between items-center">
-                  <Skeleton className="h-6 w-32" />
-                  <Skeleton className="h-6 w-24" />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : invoices.length > 0 ? (
-        <div className="space-y-3">
-          {invoices.map((invoice) => (
-            <Card key={invoice.id} className="overflow-hidden">
-              <CardContent className="p-4">
-                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-primary/70" />
+    <Card>
+      <CardHeader>
+        <CardTitle>Invoice History</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <p className="text-center text-muted-foreground">Loading invoices...</p>
+        ) : invoices.length > 0 ? (
+          <div className="space-y-4">
+            {invoices.map((invoice) => (
+              <Card key={invoice.id} className="overflow-hidden">
+                <CardContent className="p-4">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
                     <div>
-                      <p className="font-medium">Invoice #{invoice.invoice_number}</p>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Calendar className="h-3.5 w-3.5" />
-                        <span>{formatDate(invoice.created_at)}</span>
-                      </div>
+                      <h3 className="text-lg font-semibold">Invoice #{invoice.invoice_number}</h3>
+                      <p className="text-muted-foreground text-sm">
+                        {format(new Date(invoice.created_at), 'PP')}
+                      </p>
+                      {invoice.data.billTo?.name && (
+                        <p className="text-sm mt-1">Client: {invoice.data.billTo.name}</p>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button variant="outline" size="sm" className="flex items-center gap-1">
+                        <Eye className="h-3.5 w-3.5" />
+                        <span>View</span>
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="flex items-center gap-1"
+                        onClick={() => handlePrintInvoice(invoice.invoice_number)}
+                      >
+                        <Printer className="h-3.5 w-3.5" />
+                        <span>Print</span>
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="flex items-center gap-1"
+                        onClick={() => handleDownloadInvoice(invoice.invoice_number)}
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        <span>Download</span>
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleViewInvoice(invoice.id)}
-                      className="text-xs gap-1"
-                    >
-                      <Eye className="h-3.5 w-3.5" />
-                      {selectedInvoice === invoice.id ? 'Hide' : 'View'}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePrintInvoice(invoice.invoice_number)}
-                      className="text-xs gap-1"
-                    >
-                      <Printer className="h-3.5 w-3.5" />
-                      Print
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDownloadInvoice(invoice.invoice_number)}
-                      className="text-xs gap-1"
-                    >
-                      <Download className="h-3.5 w-3.5" />
-                      Download
-                    </Button>
+                  <div className="mt-2 flex flex-wrap gap-2 items-center">
+                    <span className="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-900/30 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:text-blue-300">
+                      Amount: ₹{invoice.data.total.toFixed(2)}
+                    </span>
+                    <span className="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-800 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:text-gray-300">
+                      {invoice.data.items.length} items
+                    </span>
                   </div>
-                </div>
-                {selectedInvoice === invoice.id && (
-                  <div className="mt-4 pt-4 border-t">
-                    <div className="bg-muted/30 p-4 rounded-md">
-                      <pre className="whitespace-pre-wrap text-xs overflow-x-auto">
-                        Client: {invoice.data?.billTo?.name || 'N/A'}
-                      </pre>
-                      <div className="mt-2 text-xs text-muted-foreground">
-                        <p>Total: ₹{invoice.data?.total?.toFixed(2) || 'N/A'}</p>
-                        <p>Due Date: {invoice.data?.dueDate ? formatDate(invoice.data.dueDate) : 'N/A'}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <Card>
-          <CardContent className="p-6 text-center">
-            <p className="text-muted-foreground">No invoices generated yet</p>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">No invoices found</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

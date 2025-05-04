@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -151,6 +152,7 @@ const Invoice = () => {
       
       // Save the invoice to the database
       try {
+        // @ts-ignore - We need to ignore the type error since the invoices table doesn't exist in types yet
         const { error: saveError } = await supabase
           .from('invoices')
           .insert({
@@ -196,35 +198,39 @@ const Invoice = () => {
   const isBusinessInfoMissing = !businessInfo.business_name || !businessInfo.business_address || !businessInfo.contact_number;
   
   return (
-    <SidebarProvider>
-      <div className="flex w-full min-h-screen">
-        <AppSidebar />
-        <div className="flex-1 min-h-screen">
-          <main className="container mx-auto px-4 py-6 md:py-10 max-w-6xl">
-            <div className="text-center mb-8 md:mb-12 animate-fade-in">
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">AI Invoice Generator</h1>
-              <p className="mt-2 text-muted-foreground text-sm md:text-base">
-                Describe your invoice in natural language and our AI will generate it for you
-              </p>
-            </div>
-            
-            {isBusinessInfoMissing && (
-              <div className="mb-6 md:mb-8 p-3 md:p-4 border border-yellow-200 bg-yellow-50 rounded-md">
-                <p className="text-yellow-800 font-medium text-sm md:text-base">Business information incomplete</p>
-                <p className="text-xs md:text-sm text-yellow-700 mt-1">
-                  Add your business name, address, contact number, and GSTN number in your profile to display them on invoices.
-                </p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="mt-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-800"
-                  onClick={() => window.location.href = '/profile'}
-                >
-                  Update Profile
-                </Button>
-              </div>
-            )}
-            
+    <div className="flex-1 min-h-screen">
+      <main className="container mx-auto px-4 py-6 md:py-10 max-w-6xl">
+        <div className="text-center mb-8 md:mb-12 animate-fade-in">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">AI Invoice Generator</h1>
+          <p className="mt-2 text-muted-foreground text-sm md:text-base">
+            Describe your invoice in natural language and our AI will generate it for you
+          </p>
+        </div>
+        
+        {isBusinessInfoMissing && (
+          <div className="mb-6 md:mb-8 p-3 md:p-4 border border-yellow-200 bg-yellow-50 rounded-md">
+            <p className="text-yellow-800 font-medium text-sm md:text-base">Business information incomplete</p>
+            <p className="text-xs md:text-sm text-yellow-700 mt-1">
+              Add your business name, address, contact number, and GSTN number in your profile to display them on invoices.
+            </p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mt-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-800"
+              onClick={() => window.location.href = '/profile'}
+            >
+              Update Profile
+            </Button>
+          </div>
+        )}
+        
+        <Tabs defaultValue="generate" value={activeTab} onValueChange={setActiveTab} className="print:hidden">
+          <TabsList className="mb-6">
+            <TabsTrigger value="generate">Generate Invoice</TabsTrigger>
+            <TabsTrigger value="history">Invoice History</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="generate">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8 print:hidden">
               <div className="space-y-4 md:space-y-8">
                 <Card className="animate-fade-in">
@@ -361,14 +367,18 @@ const Invoice = () => {
                 )}
               </div>
             </div>
-            
-            <div className="hidden print:block">
-              {invoiceData && <InvoicePreview invoice={invoiceData} template={selectedTemplate} />}
-            </div>
-          </main>
+          </TabsContent>
+          
+          <TabsContent value="history">
+            <InvoiceHistory />
+          </TabsContent>
+        </Tabs>
+        
+        <div className="hidden print:block">
+          {invoiceData && <InvoicePreview invoice={invoiceData} template={selectedTemplate} />}
         </div>
-      </div>
-    </SidebarProvider>
+      </main>
+    </div>
   );
 };
 
