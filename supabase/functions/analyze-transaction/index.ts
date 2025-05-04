@@ -22,6 +22,10 @@ serve(async (req) => {
       throw new Error('Prompt is required');
     }
 
+    // Get current date in YYYY-MM-DD format to provide as default
+    const today = new Date();
+    const defaultDate = today.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -39,7 +43,7 @@ serve(async (req) => {
             - amount: the numeric amount of the transaction (without currency symbol)
             - description: a clean description of the transaction
             - category: the appropriate accounting category
-            - date: the date of the transaction in YYYY-MM-DD format, use today if not specified
+            - date: the date of the transaction in YYYY-MM-DD format, use "${defaultDate}" if not specified
             
             Parse any currency values, whether in INR (₹) or USD ($) format, and extract just the numeric amount.
             Do not include any explanations or additional text in your response, only the JSON object.`
