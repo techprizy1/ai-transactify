@@ -32,7 +32,7 @@ const InvoiceHistory = () => {
       if (!user) return;
       
       try {
-        // Using any type to bypass TypeScript error until types are properly updated
+        // Using type assertion to bypass TypeScript error until types are properly updated
         const { data, error } = await supabase
           .from('invoices' as any)
           .select('*')

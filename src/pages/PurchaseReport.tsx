@@ -59,7 +59,7 @@ const PurchaseReport = () => {
       }
       
       // Map the database fields to match the PurchaseOrder interface
-      const mappedData = data.map((order: any) => ({
+      const mappedData = data ? data.map((order: any) => ({
         id: order.id,
         supplier: order.supplier,
         deliveryDate: order.delivery_date,
@@ -67,7 +67,7 @@ const PurchaseReport = () => {
         totalAmount: order.total_amount,
         status: order.status,
         createdAt: order.created_at
-      }));
+      })) : [];
       
       setPurchaseOrders(mappedData);
     } catch (error) {

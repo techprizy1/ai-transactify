@@ -9,59 +9,60 @@ interface InvoiceTemplatesProps {
   onSelectTemplate: (template: InvoiceTemplateType) => void;
 }
 
+// Define the templates array separately to avoid naming conflict with component
+export const templateOptions: { 
+  id: InvoiceTemplateType; 
+  name: string; 
+  description: string;
+  icon: React.ReactNode;
+  gradient: string;
+}[] = [
+  {
+    id: 'classic',
+    name: 'Classic',
+    description: 'Traditional invoice layout with a professional look',
+    icon: <FileText className="h-5 w-5" />,
+    gradient: 'from-blue-100 to-blue-50',
+  },
+  {
+    id: 'modern',
+    name: 'Modern',
+    description: 'Contemporary design with clean lines and visual hierarchy',
+    icon: <Layout className="h-5 w-5" />,
+    gradient: 'from-purple-100 to-indigo-50',
+  },
+  {
+    id: 'minimal',
+    name: 'Minimal',
+    description: 'Simplified layout focusing on essential information',
+    icon: <LayoutGrid className="h-5 w-5" />,
+    gradient: 'from-gray-100 to-gray-50',
+  },
+  {
+    id: 'corporate',
+    name: 'Corporate',
+    description: 'Professional template for business invoices',
+    icon: <Layers className="h-5 w-5" />,
+    gradient: 'from-blue-200 to-sky-50',
+  },
+  {
+    id: 'creative',
+    name: 'Creative',
+    description: 'Colorful design for creative businesses',
+    icon: <Palette className="h-5 w-5" />,
+    gradient: 'from-pink-100 to-rose-50',
+  },
+];
+
 const InvoiceTemplates: React.FC<InvoiceTemplatesProps> = ({ 
   selectedTemplate, 
   onSelectTemplate 
 }) => {
-  const templates: { 
-    id: InvoiceTemplateType; 
-    name: string; 
-    description: string;
-    icon: React.ReactNode;
-    gradient: string;
-  }[] = [
-    {
-      id: 'classic',
-      name: 'Classic',
-      description: 'Traditional invoice layout with a professional look',
-      icon: <FileText className="h-5 w-5" />,
-      gradient: 'from-blue-100 to-blue-50',
-    },
-    {
-      id: 'modern',
-      name: 'Modern',
-      description: 'Contemporary design with clean lines and visual hierarchy',
-      icon: <Layout className="h-5 w-5" />,
-      gradient: 'from-purple-100 to-indigo-50',
-    },
-    {
-      id: 'minimal',
-      name: 'Minimal',
-      description: 'Simplified layout focusing on essential information',
-      icon: <LayoutGrid className="h-5 w-5" />,
-      gradient: 'from-gray-100 to-gray-50',
-    },
-    {
-      id: 'corporate',
-      name: 'Corporate',
-      description: 'Professional template for business invoices',
-      icon: <Layers className="h-5 w-5" />,
-      gradient: 'from-blue-200 to-sky-50',
-    },
-    {
-      id: 'creative',
-      name: 'Creative',
-      description: 'Colorful design for creative businesses',
-      icon: <Palette className="h-5 w-5" />,
-      gradient: 'from-pink-100 to-rose-50',
-    },
-  ];
-
   return (
     <div className="space-y-4">
       <h3 className="text-base font-medium">Select Template</h3>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-        {templates.map((template) => (
+        {templateOptions.map((template) => (
           <div
             key={template.id}
             className={`
