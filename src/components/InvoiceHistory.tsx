@@ -8,7 +8,7 @@ import { Eye, Download, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import { downloadInvoice, printInvoice } from '@/utils/pdf-utils';
 import { StoredInvoice } from '@/lib/types';
-import { formatDate } from '@/lib/utils';
+import { format } from 'date-fns';
 
 const InvoiceHistory = () => {
   const [invoices, setInvoices] = useState<StoredInvoice[]>([]);
@@ -21,6 +21,7 @@ const InvoiceHistory = () => {
       typeof item === 'object' && 
       item !== null && 
       'invoice_number' in item && 
+      'data' in item && 
       'created_at' in item && 
       'user_id' in item
     );
@@ -42,28 +43,8 @@ const InvoiceHistory = () => {
           return;
         }
         
-        if (data) {
-          // Transform the data into StoredInvoice format
-          const formattedInvoices = data.map((invoice: any) => ({
-            id: invoice.id,
-            invoice_number: invoice.invoice_number,
-            data: {
-              invoiceNumber: invoice.invoice_number,
-              date: invoice.date,
-              dueDate: invoice.due_date,
-              billTo: invoice.bill_to,
-              items: invoice.items,
-              subtotal: invoice.subtotal,
-              taxRate: invoice.tax_rate,
-              taxAmount: invoice.tax_amount,
-              total: invoice.total,
-              businessInfo: invoice.business_info
-            },
-            created_at: invoice.created_at,
-            user_id: invoice.user_id
-          }));
-          
-          setInvoices(formattedInvoices);
+        if (data && isStoredInvoiceArray(data)) {
+          setInvoices(data);
         }
       } catch (error) {
         console.error('Error fetching invoices:', error);
@@ -115,7 +96,7 @@ const InvoiceHistory = () => {
                     <div>
                       <h3 className="text-lg font-semibold">Invoice #{invoice.invoice_number}</h3>
                       <p className="text-muted-foreground text-sm">
-                        {formatDate(invoice.created_at)}
+                        {format(new Date(invoice.created_at), 'PP')}
                       </p>
                       {invoice.data.billTo?.name && (
                         <p className="text-sm mt-1">Client: {invoice.data.billTo.name}</p>

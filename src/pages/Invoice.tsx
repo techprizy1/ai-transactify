@@ -15,7 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import InvoicePreview from '@/components/InvoicePreview';
 import { downloadInvoice, printInvoice } from '@/utils/pdf-utils';
 import { InvoiceData, InvoiceItem } from '@/lib/types';
-import { InvoiceTemplateType, templateOptions } from '@/components/InvoiceTemplates';
+import { InvoiceTemplateType, InvoiceTemplates } from '@/components/InvoiceTemplates';
 
 const Invoice = () => {
   const { invoiceNumber } = useParams<{ invoiceNumber: string }>();
@@ -46,7 +46,6 @@ const Invoice = () => {
       
       try {
         setLoading(true);
-        
         // Use type assertion to bypass TypeScript error
         const { data: invoiceData, error: invoiceError } = await supabase
           .from('invoices' as any)
@@ -59,17 +58,17 @@ const Invoice = () => {
         }
         
         if (invoiceData && invoiceData.length > 0) {
-          const fetchedInvoice = invoiceData[0] as any;
+          const fetchedInvoice = invoiceData[0];
           setInvoiceData({
-            invoiceNumber: fetchedInvoice.invoice_number || '',
-            date: fetchedInvoice.date || '',
-            dueDate: fetchedInvoice.due_date || '',
-            billTo: fetchedInvoice.bill_to || { name: '', address: '' },
-            items: fetchedInvoice.items || [],
-            subtotal: fetchedInvoice.subtotal || 0,
-            taxRate: fetchedInvoice.tax_rate || 0,
-            taxAmount: fetchedInvoice.tax_amount || 0,
-            total: fetchedInvoice.total || 0,
+            invoiceNumber: fetchedInvoice.invoice_number,
+            date: fetchedInvoice.date,
+            dueDate: fetchedInvoice.due_date,
+            billTo: fetchedInvoice.bill_to as InvoiceData['billTo'],
+            items: fetchedInvoice.items as InvoiceItem[],
+            subtotal: fetchedInvoice.subtotal,
+            taxRate: fetchedInvoice.tax_rate,
+            taxAmount: fetchedInvoice.tax_amount,
+            total: fetchedInvoice.total,
           });
         } else if (invoiceNumber) {
           toast.info('Invoice not found, creating a new one');
@@ -119,12 +118,12 @@ const Invoice = () => {
   
   const handleItemChange = (index: number, field: string, value: any) => {
     const newItems = [...invoiceData.items];
-    newItems[index][field as keyof InvoiceItem] = value;
+    newItems[index][field] = value;
     
     // Calculate amount if quantity or unitPrice changes
     if (field === 'quantity' || field === 'unitPrice') {
-      const quantity = parseFloat(newItems[index].quantity.toString() || '0');
-      const unitPrice = parseFloat(newItems[index].unitPrice.toString() || '0');
+      const quantity = parseFloat(newItems[index].quantity || 0);
+      const unitPrice = parseFloat(newItems[index].unitPrice || 0);
       newItems[index].amount = quantity * unitPrice;
     }
     
@@ -157,7 +156,7 @@ const Invoice = () => {
       setLoading(true);
       
       const { data, error } = await supabase
-        .from('invoices' as any)
+        .from('invoices')
         .upsert({
           id: invoiceNumber || undefined,
           user_id: user.id,
@@ -369,15 +368,12 @@ const Invoice = () => {
           <CardContent className="space-y-4">
             <div>
               <Label htmlFor="template">Template</Label>
-              <Select 
-                onValueChange={(value) => setTemplate(value as InvoiceTemplateType)} 
-                defaultValue={template}
-              >
+              <Select onValueChange={setTemplate} defaultValue={template}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a template" />
                 </SelectTrigger>
                 <SelectContent>
-                  {templateOptions.map((template) => (
+                  {InvoiceTemplates.map((template) => (
                     <SelectItem key={template.value} value={template.value}>
                       {template.label}
                     </SelectItem>
