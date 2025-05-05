@@ -93,11 +93,11 @@ const TransactionInput = ({ onTransactionCreated }: TransactionInputProps) => {
               {isAnalyzing ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Analyzing transaction...
+                  Record transaction...
                 </>
               ) : (
                 <>
-                  Analyze transaction
+                  Record transaction
                   <SendHorizontal className="ml-2 h-4 w-4" />
                 </>
               )}
