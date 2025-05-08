@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/AppSidebar';
@@ -11,7 +12,7 @@ import { useAuth } from '@/context/AuthContext';
 const Transactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, isPro } = useAuth();
   
   // Load transactions from database on component mount
   const fetchTransactions = async () => {
@@ -94,6 +95,11 @@ const Transactions = () => {
               <p className="mt-2 text-muted-foreground">
                 Describe your transaction in natural language and our AI will do the rest
               </p>
+              {!isPro && (
+                <div className="mt-2 text-amber-600 text-sm">
+                  Beta users can record up to 5 transactions per day
+                </div>
+              )}
             </div>
             
             <div className="grid md:grid-cols-2 gap-8">
